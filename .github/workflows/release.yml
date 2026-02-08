@@ -114,6 +114,9 @@ jobs:
         run: |
           mkdir -p ios/Frameworks
 
+          # Remove existing xcframework if any
+          rm -rf ios/Frameworks/cook_lib.xcframework
+
           # Create fat library for simulators
           mkdir -p artifacts/ios-simulator-universal
           lipo -create \
