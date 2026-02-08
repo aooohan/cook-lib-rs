@@ -1,6 +1,6 @@
 name: cook_lib
 description: "Cook recipe extraction library with ASR and video frame analysis."
-version: 0.1.0
+version: 0.0.1
 homepage: https://github.com/aooohan/cook_lib
 
 environment:
