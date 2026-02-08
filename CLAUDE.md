@@ -26,3 +26,7 @@ just --list    # 查看所有可用命令
 
 1. **flutter_rust_bridge 版本**：Rust 和 Dart 必须一致（2.11.1）
 2. **修改 Rust API 后**：必须执行 `just generate-bindings`
+
+## AI 行为规则
+
+1. **Bash 执行结果**：只关注成功/失败，忽略正常日志输出（避免上下文膨胀）

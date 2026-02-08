@@ -24,3 +24,15 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+  assets:
+  # sherpa-ncnn ASR model (bilingual zh-en, 142MB full model)
+  - models/zipformer-ncnn/encoder_jit_trace-pnnx.ncnn.param
+  - models/zipformer-ncnn/encoder_jit_trace-pnnx.ncnn.bin
+  - models/zipformer-ncnn/decoder_jit_trace-pnnx.ncnn.param
+  - models/zipformer-ncnn/decoder_jit_trace-pnnx.ncnn.bin
+  - models/zipformer-ncnn/joiner_jit_trace-pnnx.ncnn.param
+  - models/zipformer-ncnn/joiner_jit_trace-pnnx.ncnn.bin
+  - models/zipformer-ncnn/tokens.txt
+  # Silero VAD model
+  - models/silero-vad/silero.ncnn.param
+  - models/silero-vad/silero.ncnn.bin
