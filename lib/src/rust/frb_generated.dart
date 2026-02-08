@@ -5,12 +5,10 @@
 
 import 'api/audio.dart';
 import 'api/models/xhs.dart';
-import 'api/simple.dart';
 import 'api/video.dart';
 import 'api/xhs.dart';
 import 'core/audio/error.dart';
-import 'core/video/pipeline.dart';
-import 'core/video/state_machine.dart';
+import 'core/video/manager.dart';
 import 'dart:async';
 import 'dart:convert';
 import 'frb_generated.dart';
@@ -61,9 +59,7 @@ class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
       RustLibWire.fromExternalLibrary;
 
   @override
-  Future<void> executeRustInitializers() async {
-    await api.crateApiSimpleInitApp();
-  }
+  Future<void> executeRustInitializers() async {}
 
   @override
   ExternalLibraryLoaderConfig get defaultExternalLibraryLoaderConfig =>
@@ -73,7 +69,7 @@ class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
   String get codegenVersion => '2.11.1';
 
   @override
-  int get rustContentHash => -678905927;
+  int get rustContentHash => 1919093226;
 
   static const kDefaultExternalLibraryLoaderConfig =
       ExternalLibraryLoaderConfig(
@@ -84,111 +80,46 @@ class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
 }
 
 abstract class RustLibApi extends BaseApi {
-  ExtractionStats crateApiVideoFrameExtractorManagerGetStats({
-    required FrameExtractorManager that,
+  Future<AudioRecognizer> crateApiAudioAudioRecognizerCreate({
+    required String modelsDir,
   });
 
-  FrameExtractorManager crateApiVideoFrameExtractorManagerNew();
+  String crateApiAudioAudioRecognizerModelsDir({required AudioRecognizer that});
+
+  Future<String> crateApiAudioAudioRecognizerTranscribeAudio({
+    required AudioRecognizer that,
+    required String path,
+    String? language,
+  });
+
+  Future<String> crateApiAudioAudioRecognizerTranscribePcm({
+    required AudioRecognizer that,
+    required List<double> pcm,
+    required int sampleRate,
+    String? language,
+  });
+
+  VideoFrameExtractor crateApiVideoVideoFrameExtractorCreate();
 
   Future<List<FrameExtractedInfo>>
-  crateApiVideoFrameExtractorManagerProcessBatch({
-    required FrameExtractorManager that,
+  crateApiVideoVideoFrameExtractorProcessBatch({
+    required VideoFrameExtractor that,
     required List<YFrameData> frames,
   });
 
-  FrameExtractedInfo? crateApiVideoFrameExtractorManagerProcessFrame({
-    required FrameExtractorManager that,
-    required int width,
-    required int height,
-    required List<int> rgbaData,
-    required BigInt timestampMs,
-    required BigInt frameNumber,
+  void crateApiVideoVideoFrameExtractorReset({
+    required VideoFrameExtractor that,
   });
 
-  FrameExtractedInfo? crateApiVideoFrameExtractorManagerProcessYFrame({
-    required FrameExtractorManager that,
-    required int width,
-    required int height,
-    required List<int> yPlane,
-    required BigInt timestampMs,
-    required BigInt frameNumber,
+  ExtractionStats crateApiVideoVideoFrameExtractorStats({
+    required VideoFrameExtractor that,
   });
-
-  FrameExtractedInfo? crateApiVideoFrameExtractorManagerProcessYuvFrame({
-    required FrameExtractorManager that,
-    required int width,
-    required int height,
-    required List<int> yPlane,
-    required List<int> uPlane,
-    required List<int> vPlane,
-    required BigInt timestampMs,
-    required BigInt frameNumber,
-  });
-
-  void crateApiVideoFrameExtractorManagerReset({
-    required FrameExtractorManager that,
-  });
-
-  FrameExtractorManager crateApiVideoFrameExtractorManagerWithMockDetector({
-    required Uint64List textFrames,
-  });
-
-  ExtractionConfig crateApiVideoCreateHighMotionConfig();
-
-  ExtractionConfig crateApiVideoCreateLowMotionConfig();
-
-  Future<List<CroppedFrame>> crateApiVideoCropAndResizeBatch({
-    required List<YuvFrameData> frames,
-    required FrameCropConfig config,
-  });
-
-  CroppedFrame crateApiVideoCropAndResizeFrame({
-    required List<int> yPlane,
-    required List<int> uPlane,
-    required List<int> vPlane,
-    required int width,
-    required int height,
-    required BigInt timestampMs,
-    required BigInt frameNumber,
-  });
-
-  CroppedFrame crateApiVideoCropAndResizeFrameWithConfig({
-    required List<int> yPlane,
-    required List<int> uPlane,
-    required List<int> vPlane,
-    required int width,
-    required int height,
-    required BigInt timestampMs,
-    required BigInt frameNumber,
-    required FrameCropConfig config,
-  });
-
-  Future<FrameCropConfig> crateApiVideoFrameCropConfigDefault();
-
-  String crateApiSimpleGreet({required String name});
-
-  Future<void> crateApiSimpleInitApp();
-
-  void crateApiAudioInitSherpa({required String modelPath});
-
-  void crateApiAudioInitVad({required String vadModelPath});
 
   Future<NoteType> crateApiModelsXhsNoteTypeDefault();
 
   XhsArticle crateApiXhsParseXhsFromText({required String text});
 
   XhsArticle crateApiXhsParseXhsFromUrl({required String url});
-
-  Future<String> crateApiAudioTranscribeAudio({
-    required String path,
-    String? language,
-  });
-
-  Future<String> crateApiAudioTranscribePcm({
-    required List<double> pcm,
-    required int sampleRate,
-    String? language,
-  });
 
   RustArcIncrementStrongCountFnType
   get rust_arc_increment_strong_count_AudioError;
@@ -199,13 +130,22 @@ abstract class RustLibApi extends BaseApi {
   CrossPlatformFinalizerArg get rust_arc_decrement_strong_count_AudioErrorPtr;
 
   RustArcIncrementStrongCountFnType
-  get rust_arc_increment_strong_count_FrameExtractorManager;
+  get rust_arc_increment_strong_count_AudioRecognizer;
 
   RustArcDecrementStrongCountFnType
-  get rust_arc_decrement_strong_count_FrameExtractorManager;
+  get rust_arc_decrement_strong_count_AudioRecognizer;
 
   CrossPlatformFinalizerArg
-  get rust_arc_decrement_strong_count_FrameExtractorManagerPtr;
+  get rust_arc_decrement_strong_count_AudioRecognizerPtr;
+
+  RustArcIncrementStrongCountFnType
+  get rust_arc_increment_strong_count_VideoFrameExtractor;
+
+  RustArcDecrementStrongCountFnType
+  get rust_arc_decrement_strong_count_VideoFrameExtractor;
+
+  CrossPlatformFinalizerArg
+  get rust_arc_decrement_strong_count_VideoFrameExtractorPtr;
 }
 
 class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
@@ -217,74 +157,87 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   });
 
   @override
-  ExtractionStats crateApiVideoFrameExtractorManagerGetStats({
-    required FrameExtractorManager that,
+  Future<AudioRecognizer> crateApiAudioAudioRecognizerCreate({
+    required String modelsDir,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_String(modelsDir, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 1,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData:
+              sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerAudioRecognizer,
+          decodeErrorData:
+              sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerAudioError,
+        ),
+        constMeta: kCrateApiAudioAudioRecognizerCreateConstMeta,
+        argValues: [modelsDir],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiAudioAudioRecognizerCreateConstMeta =>
+      const TaskConstMeta(
+        debugName: "AudioRecognizer_create",
+        argNames: ["modelsDir"],
+      );
+
+  @override
+  String crateApiAudioAudioRecognizerModelsDir({
+    required AudioRecognizer that,
   }) {
     return handler.executeSync(
       SyncTask(
         callFfi: () {
           final serializer = SseSerializer(generalizedFrbRustBinding);
-          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFrameExtractorManager(
+          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerAudioRecognizer(
             that,
             serializer,
           );
-          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 1)!;
+          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 2)!;
         },
         codec: SseCodec(
-          decodeSuccessData: sse_decode_extraction_stats,
+          decodeSuccessData: sse_decode_String,
           decodeErrorData: null,
         ),
-        constMeta: kCrateApiVideoFrameExtractorManagerGetStatsConstMeta,
+        constMeta: kCrateApiAudioAudioRecognizerModelsDirConstMeta,
         argValues: [that],
         apiImpl: this,
       ),
     );
   }
 
-  TaskConstMeta get kCrateApiVideoFrameExtractorManagerGetStatsConstMeta =>
+  TaskConstMeta get kCrateApiAudioAudioRecognizerModelsDirConstMeta =>
       const TaskConstMeta(
-        debugName: "FrameExtractorManager_get_stats",
+        debugName: "AudioRecognizer_models_dir",
         argNames: ["that"],
       );
 
   @override
-  FrameExtractorManager crateApiVideoFrameExtractorManagerNew() {
-    return handler.executeSync(
-      SyncTask(
-        callFfi: () {
-          final serializer = SseSerializer(generalizedFrbRustBinding);
-          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 2)!;
-        },
-        codec: SseCodec(
-          decodeSuccessData:
-              sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFrameExtractorManager,
-          decodeErrorData: null,
-        ),
-        constMeta: kCrateApiVideoFrameExtractorManagerNewConstMeta,
-        argValues: [],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta get kCrateApiVideoFrameExtractorManagerNewConstMeta =>
-      const TaskConstMeta(debugName: "FrameExtractorManager_new", argNames: []);
-
-  @override
-  Future<List<FrameExtractedInfo>>
-  crateApiVideoFrameExtractorManagerProcessBatch({
-    required FrameExtractorManager that,
-    required List<YFrameData> frames,
+  Future<String> crateApiAudioAudioRecognizerTranscribeAudio({
+    required AudioRecognizer that,
+    required String path,
+    String? language,
   }) {
     return handler.executeNormal(
       NormalTask(
         callFfi: (port_) {
           final serializer = SseSerializer(generalizedFrbRustBinding);
-          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFrameExtractorManager(
+          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerAudioRecognizer(
             that,
             serializer,
           );
-          sse_encode_list_y_frame_data(frames, serializer);
+          sse_encode_String(path, serializer);
+          sse_encode_opt_String(language, serializer);
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
@@ -293,191 +246,140 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           );
         },
         codec: SseCodec(
+          decodeSuccessData: sse_decode_String,
+          decodeErrorData:
+              sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerAudioError,
+        ),
+        constMeta: kCrateApiAudioAudioRecognizerTranscribeAudioConstMeta,
+        argValues: [that, path, language],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiAudioAudioRecognizerTranscribeAudioConstMeta =>
+      const TaskConstMeta(
+        debugName: "AudioRecognizer_transcribe_audio",
+        argNames: ["that", "path", "language"],
+      );
+
+  @override
+  Future<String> crateApiAudioAudioRecognizerTranscribePcm({
+    required AudioRecognizer that,
+    required List<double> pcm,
+    required int sampleRate,
+    String? language,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerAudioRecognizer(
+            that,
+            serializer,
+          );
+          sse_encode_list_prim_f_32_loose(pcm, serializer);
+          sse_encode_u_32(sampleRate, serializer);
+          sse_encode_opt_String(language, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 4,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_String,
+          decodeErrorData:
+              sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerAudioError,
+        ),
+        constMeta: kCrateApiAudioAudioRecognizerTranscribePcmConstMeta,
+        argValues: [that, pcm, sampleRate, language],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiAudioAudioRecognizerTranscribePcmConstMeta =>
+      const TaskConstMeta(
+        debugName: "AudioRecognizer_transcribe_pcm",
+        argNames: ["that", "pcm", "sampleRate", "language"],
+      );
+
+  @override
+  VideoFrameExtractor crateApiVideoVideoFrameExtractorCreate() {
+    return handler.executeSync(
+      SyncTask(
+        callFfi: () {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 5)!;
+        },
+        codec: SseCodec(
+          decodeSuccessData:
+              sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerVideoFrameExtractor,
+          decodeErrorData: null,
+        ),
+        constMeta: kCrateApiVideoVideoFrameExtractorCreateConstMeta,
+        argValues: [],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiVideoVideoFrameExtractorCreateConstMeta =>
+      const TaskConstMeta(
+        debugName: "VideoFrameExtractor_create",
+        argNames: [],
+      );
+
+  @override
+  Future<List<FrameExtractedInfo>>
+  crateApiVideoVideoFrameExtractorProcessBatch({
+    required VideoFrameExtractor that,
+    required List<YFrameData> frames,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerVideoFrameExtractor(
+            that,
+            serializer,
+          );
+          sse_encode_list_y_frame_data(frames, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 6,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
           decodeSuccessData: sse_decode_list_frame_extracted_info,
           decodeErrorData: null,
         ),
-        constMeta: kCrateApiVideoFrameExtractorManagerProcessBatchConstMeta,
+        constMeta: kCrateApiVideoVideoFrameExtractorProcessBatchConstMeta,
         argValues: [that, frames],
         apiImpl: this,
       ),
     );
   }
 
-  TaskConstMeta get kCrateApiVideoFrameExtractorManagerProcessBatchConstMeta =>
+  TaskConstMeta get kCrateApiVideoVideoFrameExtractorProcessBatchConstMeta =>
       const TaskConstMeta(
-        debugName: "FrameExtractorManager_process_batch",
+        debugName: "VideoFrameExtractor_process_batch",
         argNames: ["that", "frames"],
       );
 
   @override
-  FrameExtractedInfo? crateApiVideoFrameExtractorManagerProcessFrame({
-    required FrameExtractorManager that,
-    required int width,
-    required int height,
-    required List<int> rgbaData,
-    required BigInt timestampMs,
-    required BigInt frameNumber,
+  void crateApiVideoVideoFrameExtractorReset({
+    required VideoFrameExtractor that,
   }) {
     return handler.executeSync(
       SyncTask(
         callFfi: () {
           final serializer = SseSerializer(generalizedFrbRustBinding);
-          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFrameExtractorManager(
-            that,
-            serializer,
-          );
-          sse_encode_u_32(width, serializer);
-          sse_encode_u_32(height, serializer);
-          sse_encode_list_prim_u_8_loose(rgbaData, serializer);
-          sse_encode_u_64(timestampMs, serializer);
-          sse_encode_u_64(frameNumber, serializer);
-          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 4)!;
-        },
-        codec: SseCodec(
-          decodeSuccessData: sse_decode_opt_box_autoadd_frame_extracted_info,
-          decodeErrorData: null,
-        ),
-        constMeta: kCrateApiVideoFrameExtractorManagerProcessFrameConstMeta,
-        argValues: [that, width, height, rgbaData, timestampMs, frameNumber],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta get kCrateApiVideoFrameExtractorManagerProcessFrameConstMeta =>
-      const TaskConstMeta(
-        debugName: "FrameExtractorManager_process_frame",
-        argNames: [
-          "that",
-          "width",
-          "height",
-          "rgbaData",
-          "timestampMs",
-          "frameNumber",
-        ],
-      );
-
-  @override
-  FrameExtractedInfo? crateApiVideoFrameExtractorManagerProcessYFrame({
-    required FrameExtractorManager that,
-    required int width,
-    required int height,
-    required List<int> yPlane,
-    required BigInt timestampMs,
-    required BigInt frameNumber,
-  }) {
-    return handler.executeSync(
-      SyncTask(
-        callFfi: () {
-          final serializer = SseSerializer(generalizedFrbRustBinding);
-          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFrameExtractorManager(
-            that,
-            serializer,
-          );
-          sse_encode_u_32(width, serializer);
-          sse_encode_u_32(height, serializer);
-          sse_encode_list_prim_u_8_loose(yPlane, serializer);
-          sse_encode_u_64(timestampMs, serializer);
-          sse_encode_u_64(frameNumber, serializer);
-          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 5)!;
-        },
-        codec: SseCodec(
-          decodeSuccessData: sse_decode_opt_box_autoadd_frame_extracted_info,
-          decodeErrorData: null,
-        ),
-        constMeta: kCrateApiVideoFrameExtractorManagerProcessYFrameConstMeta,
-        argValues: [that, width, height, yPlane, timestampMs, frameNumber],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta get kCrateApiVideoFrameExtractorManagerProcessYFrameConstMeta =>
-      const TaskConstMeta(
-        debugName: "FrameExtractorManager_process_y_frame",
-        argNames: [
-          "that",
-          "width",
-          "height",
-          "yPlane",
-          "timestampMs",
-          "frameNumber",
-        ],
-      );
-
-  @override
-  FrameExtractedInfo? crateApiVideoFrameExtractorManagerProcessYuvFrame({
-    required FrameExtractorManager that,
-    required int width,
-    required int height,
-    required List<int> yPlane,
-    required List<int> uPlane,
-    required List<int> vPlane,
-    required BigInt timestampMs,
-    required BigInt frameNumber,
-  }) {
-    return handler.executeSync(
-      SyncTask(
-        callFfi: () {
-          final serializer = SseSerializer(generalizedFrbRustBinding);
-          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFrameExtractorManager(
-            that,
-            serializer,
-          );
-          sse_encode_u_32(width, serializer);
-          sse_encode_u_32(height, serializer);
-          sse_encode_list_prim_u_8_loose(yPlane, serializer);
-          sse_encode_list_prim_u_8_loose(uPlane, serializer);
-          sse_encode_list_prim_u_8_loose(vPlane, serializer);
-          sse_encode_u_64(timestampMs, serializer);
-          sse_encode_u_64(frameNumber, serializer);
-          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 6)!;
-        },
-        codec: SseCodec(
-          decodeSuccessData: sse_decode_opt_box_autoadd_frame_extracted_info,
-          decodeErrorData: null,
-        ),
-        constMeta: kCrateApiVideoFrameExtractorManagerProcessYuvFrameConstMeta,
-        argValues: [
-          that,
-          width,
-          height,
-          yPlane,
-          uPlane,
-          vPlane,
-          timestampMs,
-          frameNumber,
-        ],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta
-  get kCrateApiVideoFrameExtractorManagerProcessYuvFrameConstMeta =>
-      const TaskConstMeta(
-        debugName: "FrameExtractorManager_process_yuv_frame",
-        argNames: [
-          "that",
-          "width",
-          "height",
-          "yPlane",
-          "uPlane",
-          "vPlane",
-          "timestampMs",
-          "frameNumber",
-        ],
-      );
-
-  @override
-  void crateApiVideoFrameExtractorManagerReset({
-    required FrameExtractorManager that,
-  }) {
-    return handler.executeSync(
-      SyncTask(
-        callFfi: () {
-          final serializer = SseSerializer(generalizedFrbRustBinding);
-          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFrameExtractorManager(
+          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerVideoFrameExtractor(
             that,
             serializer,
           );
@@ -487,368 +389,49 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           decodeSuccessData: sse_decode_unit,
           decodeErrorData: null,
         ),
-        constMeta: kCrateApiVideoFrameExtractorManagerResetConstMeta,
+        constMeta: kCrateApiVideoVideoFrameExtractorResetConstMeta,
         argValues: [that],
         apiImpl: this,
       ),
     );
   }
 
-  TaskConstMeta get kCrateApiVideoFrameExtractorManagerResetConstMeta =>
+  TaskConstMeta get kCrateApiVideoVideoFrameExtractorResetConstMeta =>
       const TaskConstMeta(
-        debugName: "FrameExtractorManager_reset",
+        debugName: "VideoFrameExtractor_reset",
         argNames: ["that"],
       );
 
   @override
-  FrameExtractorManager crateApiVideoFrameExtractorManagerWithMockDetector({
-    required Uint64List textFrames,
+  ExtractionStats crateApiVideoVideoFrameExtractorStats({
+    required VideoFrameExtractor that,
   }) {
     return handler.executeSync(
       SyncTask(
         callFfi: () {
           final serializer = SseSerializer(generalizedFrbRustBinding);
-          sse_encode_list_prim_u_64_strict(textFrames, serializer);
+          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerVideoFrameExtractor(
+            that,
+            serializer,
+          );
           return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 8)!;
         },
         codec: SseCodec(
-          decodeSuccessData:
-              sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFrameExtractorManager,
+          decodeSuccessData: sse_decode_extraction_stats,
           decodeErrorData: null,
         ),
-        constMeta: kCrateApiVideoFrameExtractorManagerWithMockDetectorConstMeta,
-        argValues: [textFrames],
+        constMeta: kCrateApiVideoVideoFrameExtractorStatsConstMeta,
+        argValues: [that],
         apiImpl: this,
       ),
     );
   }
 
-  TaskConstMeta
-  get kCrateApiVideoFrameExtractorManagerWithMockDetectorConstMeta =>
+  TaskConstMeta get kCrateApiVideoVideoFrameExtractorStatsConstMeta =>
       const TaskConstMeta(
-        debugName: "FrameExtractorManager_with_mock_detector",
-        argNames: ["textFrames"],
+        debugName: "VideoFrameExtractor_stats",
+        argNames: ["that"],
       );
-
-  @override
-  ExtractionConfig crateApiVideoCreateHighMotionConfig() {
-    return handler.executeSync(
-      SyncTask(
-        callFfi: () {
-          final serializer = SseSerializer(generalizedFrbRustBinding);
-          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 9)!;
-        },
-        codec: SseCodec(
-          decodeSuccessData: sse_decode_extraction_config,
-          decodeErrorData: null,
-        ),
-        constMeta: kCrateApiVideoCreateHighMotionConfigConstMeta,
-        argValues: [],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta get kCrateApiVideoCreateHighMotionConfigConstMeta =>
-      const TaskConstMeta(debugName: "create_high_motion_config", argNames: []);
-
-  @override
-  ExtractionConfig crateApiVideoCreateLowMotionConfig() {
-    return handler.executeSync(
-      SyncTask(
-        callFfi: () {
-          final serializer = SseSerializer(generalizedFrbRustBinding);
-          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 10)!;
-        },
-        codec: SseCodec(
-          decodeSuccessData: sse_decode_extraction_config,
-          decodeErrorData: null,
-        ),
-        constMeta: kCrateApiVideoCreateLowMotionConfigConstMeta,
-        argValues: [],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta get kCrateApiVideoCreateLowMotionConfigConstMeta =>
-      const TaskConstMeta(debugName: "create_low_motion_config", argNames: []);
-
-  @override
-  Future<List<CroppedFrame>> crateApiVideoCropAndResizeBatch({
-    required List<YuvFrameData> frames,
-    required FrameCropConfig config,
-  }) {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
-          final serializer = SseSerializer(generalizedFrbRustBinding);
-          sse_encode_list_yuv_frame_data(frames, serializer);
-          sse_encode_box_autoadd_frame_crop_config(config, serializer);
-          pdeCallFfi(
-            generalizedFrbRustBinding,
-            serializer,
-            funcId: 11,
-            port: port_,
-          );
-        },
-        codec: SseCodec(
-          decodeSuccessData: sse_decode_list_cropped_frame,
-          decodeErrorData: null,
-        ),
-        constMeta: kCrateApiVideoCropAndResizeBatchConstMeta,
-        argValues: [frames, config],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta get kCrateApiVideoCropAndResizeBatchConstMeta =>
-      const TaskConstMeta(
-        debugName: "crop_and_resize_batch",
-        argNames: ["frames", "config"],
-      );
-
-  @override
-  CroppedFrame crateApiVideoCropAndResizeFrame({
-    required List<int> yPlane,
-    required List<int> uPlane,
-    required List<int> vPlane,
-    required int width,
-    required int height,
-    required BigInt timestampMs,
-    required BigInt frameNumber,
-  }) {
-    return handler.executeSync(
-      SyncTask(
-        callFfi: () {
-          final serializer = SseSerializer(generalizedFrbRustBinding);
-          sse_encode_list_prim_u_8_loose(yPlane, serializer);
-          sse_encode_list_prim_u_8_loose(uPlane, serializer);
-          sse_encode_list_prim_u_8_loose(vPlane, serializer);
-          sse_encode_u_32(width, serializer);
-          sse_encode_u_32(height, serializer);
-          sse_encode_u_64(timestampMs, serializer);
-          sse_encode_u_64(frameNumber, serializer);
-          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 12)!;
-        },
-        codec: SseCodec(
-          decodeSuccessData: sse_decode_cropped_frame,
-          decodeErrorData: null,
-        ),
-        constMeta: kCrateApiVideoCropAndResizeFrameConstMeta,
-        argValues: [
-          yPlane,
-          uPlane,
-          vPlane,
-          width,
-          height,
-          timestampMs,
-          frameNumber,
-        ],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta get kCrateApiVideoCropAndResizeFrameConstMeta =>
-      const TaskConstMeta(
-        debugName: "crop_and_resize_frame",
-        argNames: [
-          "yPlane",
-          "uPlane",
-          "vPlane",
-          "width",
-          "height",
-          "timestampMs",
-          "frameNumber",
-        ],
-      );
-
-  @override
-  CroppedFrame crateApiVideoCropAndResizeFrameWithConfig({
-    required List<int> yPlane,
-    required List<int> uPlane,
-    required List<int> vPlane,
-    required int width,
-    required int height,
-    required BigInt timestampMs,
-    required BigInt frameNumber,
-    required FrameCropConfig config,
-  }) {
-    return handler.executeSync(
-      SyncTask(
-        callFfi: () {
-          final serializer = SseSerializer(generalizedFrbRustBinding);
-          sse_encode_list_prim_u_8_loose(yPlane, serializer);
-          sse_encode_list_prim_u_8_loose(uPlane, serializer);
-          sse_encode_list_prim_u_8_loose(vPlane, serializer);
-          sse_encode_u_32(width, serializer);
-          sse_encode_u_32(height, serializer);
-          sse_encode_u_64(timestampMs, serializer);
-          sse_encode_u_64(frameNumber, serializer);
-          sse_encode_box_autoadd_frame_crop_config(config, serializer);
-          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 13)!;
-        },
-        codec: SseCodec(
-          decodeSuccessData: sse_decode_cropped_frame,
-          decodeErrorData: null,
-        ),
-        constMeta: kCrateApiVideoCropAndResizeFrameWithConfigConstMeta,
-        argValues: [
-          yPlane,
-          uPlane,
-          vPlane,
-          width,
-          height,
-          timestampMs,
-          frameNumber,
-          config,
-        ],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta get kCrateApiVideoCropAndResizeFrameWithConfigConstMeta =>
-      const TaskConstMeta(
-        debugName: "crop_and_resize_frame_with_config",
-        argNames: [
-          "yPlane",
-          "uPlane",
-          "vPlane",
-          "width",
-          "height",
-          "timestampMs",
-          "frameNumber",
-          "config",
-        ],
-      );
-
-  @override
-  Future<FrameCropConfig> crateApiVideoFrameCropConfigDefault() {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
-          final serializer = SseSerializer(generalizedFrbRustBinding);
-          pdeCallFfi(
-            generalizedFrbRustBinding,
-            serializer,
-            funcId: 14,
-            port: port_,
-          );
-        },
-        codec: SseCodec(
-          decodeSuccessData: sse_decode_frame_crop_config,
-          decodeErrorData: null,
-        ),
-        constMeta: kCrateApiVideoFrameCropConfigDefaultConstMeta,
-        argValues: [],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta get kCrateApiVideoFrameCropConfigDefaultConstMeta =>
-      const TaskConstMeta(debugName: "frame_crop_config_default", argNames: []);
-
-  @override
-  String crateApiSimpleGreet({required String name}) {
-    return handler.executeSync(
-      SyncTask(
-        callFfi: () {
-          final serializer = SseSerializer(generalizedFrbRustBinding);
-          sse_encode_String(name, serializer);
-          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 15)!;
-        },
-        codec: SseCodec(
-          decodeSuccessData: sse_decode_String,
-          decodeErrorData: null,
-        ),
-        constMeta: kCrateApiSimpleGreetConstMeta,
-        argValues: [name],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta get kCrateApiSimpleGreetConstMeta =>
-      const TaskConstMeta(debugName: "greet", argNames: ["name"]);
-
-  @override
-  Future<void> crateApiSimpleInitApp() {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
-          final serializer = SseSerializer(generalizedFrbRustBinding);
-          pdeCallFfi(
-            generalizedFrbRustBinding,
-            serializer,
-            funcId: 16,
-            port: port_,
-          );
-        },
-        codec: SseCodec(
-          decodeSuccessData: sse_decode_unit,
-          decodeErrorData: null,
-        ),
-        constMeta: kCrateApiSimpleInitAppConstMeta,
-        argValues: [],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta get kCrateApiSimpleInitAppConstMeta =>
-      const TaskConstMeta(debugName: "init_app", argNames: []);
-
-  @override
-  void crateApiAudioInitSherpa({required String modelPath}) {
-    return handler.executeSync(
-      SyncTask(
-        callFfi: () {
-          final serializer = SseSerializer(generalizedFrbRustBinding);
-          sse_encode_String(modelPath, serializer);
-          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 17)!;
-        },
-        codec: SseCodec(
-          decodeSuccessData: sse_decode_unit,
-          decodeErrorData:
-              sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerAudioError,
-        ),
-        constMeta: kCrateApiAudioInitSherpaConstMeta,
-        argValues: [modelPath],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta get kCrateApiAudioInitSherpaConstMeta =>
-      const TaskConstMeta(debugName: "init_sherpa", argNames: ["modelPath"]);
-
-  @override
-  void crateApiAudioInitVad({required String vadModelPath}) {
-    return handler.executeSync(
-      SyncTask(
-        callFfi: () {
-          final serializer = SseSerializer(generalizedFrbRustBinding);
-          sse_encode_String(vadModelPath, serializer);
-          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 18)!;
-        },
-        codec: SseCodec(
-          decodeSuccessData: sse_decode_unit,
-          decodeErrorData:
-              sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerAudioError,
-        ),
-        constMeta: kCrateApiAudioInitVadConstMeta,
-        argValues: [vadModelPath],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta get kCrateApiAudioInitVadConstMeta =>
-      const TaskConstMeta(debugName: "init_vad", argNames: ["vadModelPath"]);
 
   @override
   Future<NoteType> crateApiModelsXhsNoteTypeDefault() {
@@ -859,7 +442,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 19,
+            funcId: 9,
             port: port_,
           );
         },
@@ -884,7 +467,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         callFfi: () {
           final serializer = SseSerializer(generalizedFrbRustBinding);
           sse_encode_String(text, serializer);
-          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 20)!;
+          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 10)!;
         },
         codec: SseCodec(
           decodeSuccessData: sse_decode_xhs_article,
@@ -907,7 +490,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         callFfi: () {
           final serializer = SseSerializer(generalizedFrbRustBinding);
           sse_encode_String(url, serializer);
-          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 21)!;
+          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 11)!;
         },
         codec: SseCodec(
           decodeSuccessData: sse_decode_xhs_article,
@@ -923,79 +506,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   TaskConstMeta get kCrateApiXhsParseXhsFromUrlConstMeta =>
       const TaskConstMeta(debugName: "parse_xhs_from_url", argNames: ["url"]);
 
-  @override
-  Future<String> crateApiAudioTranscribeAudio({
-    required String path,
-    String? language,
-  }) {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
-          final serializer = SseSerializer(generalizedFrbRustBinding);
-          sse_encode_String(path, serializer);
-          sse_encode_opt_String(language, serializer);
-          pdeCallFfi(
-            generalizedFrbRustBinding,
-            serializer,
-            funcId: 22,
-            port: port_,
-          );
-        },
-        codec: SseCodec(
-          decodeSuccessData: sse_decode_String,
-          decodeErrorData:
-              sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerAudioError,
-        ),
-        constMeta: kCrateApiAudioTranscribeAudioConstMeta,
-        argValues: [path, language],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta get kCrateApiAudioTranscribeAudioConstMeta =>
-      const TaskConstMeta(
-        debugName: "transcribe_audio",
-        argNames: ["path", "language"],
-      );
-
-  @override
-  Future<String> crateApiAudioTranscribePcm({
-    required List<double> pcm,
-    required int sampleRate,
-    String? language,
-  }) {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
-          final serializer = SseSerializer(generalizedFrbRustBinding);
-          sse_encode_list_prim_f_32_loose(pcm, serializer);
-          sse_encode_u_32(sampleRate, serializer);
-          sse_encode_opt_String(language, serializer);
-          pdeCallFfi(
-            generalizedFrbRustBinding,
-            serializer,
-            funcId: 23,
-            port: port_,
-          );
-        },
-        codec: SseCodec(
-          decodeSuccessData: sse_decode_String,
-          decodeErrorData:
-              sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerAudioError,
-        ),
-        constMeta: kCrateApiAudioTranscribePcmConstMeta,
-        argValues: [pcm, sampleRate, language],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta get kCrateApiAudioTranscribePcmConstMeta => const TaskConstMeta(
-    debugName: "transcribe_pcm",
-    argNames: ["pcm", "sampleRate", "language"],
-  );
-
   RustArcIncrementStrongCountFnType
   get rust_arc_increment_strong_count_AudioError => wire
       .rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerAudioError;
@@ -1005,12 +515,20 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerAudioError;
 
   RustArcIncrementStrongCountFnType
-  get rust_arc_increment_strong_count_FrameExtractorManager => wire
-      .rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFrameExtractorManager;
+  get rust_arc_increment_strong_count_AudioRecognizer => wire
+      .rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerAudioRecognizer;
 
   RustArcDecrementStrongCountFnType
-  get rust_arc_decrement_strong_count_FrameExtractorManager => wire
-      .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFrameExtractorManager;
+  get rust_arc_decrement_strong_count_AudioRecognizer => wire
+      .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerAudioRecognizer;
+
+  RustArcIncrementStrongCountFnType
+  get rust_arc_increment_strong_count_VideoFrameExtractor => wire
+      .rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerVideoFrameExtractor;
+
+  RustArcDecrementStrongCountFnType
+  get rust_arc_decrement_strong_count_VideoFrameExtractor => wire
+      .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerVideoFrameExtractor;
 
   @protected
   AudioError
@@ -1022,21 +540,39 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  FrameExtractorManager
-  dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFrameExtractorManager(
+  AudioRecognizer
+  dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerAudioRecognizer(
     dynamic raw,
   ) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
-    return FrameExtractorManagerImpl.frbInternalDcoDecode(raw as List<dynamic>);
+    return AudioRecognizerImpl.frbInternalDcoDecode(raw as List<dynamic>);
   }
 
   @protected
-  FrameExtractorManager
-  dco_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFrameExtractorManager(
+  VideoFrameExtractor
+  dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerVideoFrameExtractor(
     dynamic raw,
   ) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
-    return FrameExtractorManagerImpl.frbInternalDcoDecode(raw as List<dynamic>);
+    return VideoFrameExtractorImpl.frbInternalDcoDecode(raw as List<dynamic>);
+  }
+
+  @protected
+  AudioRecognizer
+  dco_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerAudioRecognizer(
+    dynamic raw,
+  ) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return AudioRecognizerImpl.frbInternalDcoDecode(raw as List<dynamic>);
+  }
+
+  @protected
+  VideoFrameExtractor
+  dco_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerVideoFrameExtractor(
+    dynamic raw,
+  ) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return VideoFrameExtractorImpl.frbInternalDcoDecode(raw as List<dynamic>);
   }
 
   @protected
@@ -1049,12 +585,21 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  FrameExtractorManager
-  dco_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFrameExtractorManager(
+  AudioRecognizer
+  dco_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerAudioRecognizer(
     dynamic raw,
   ) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
-    return FrameExtractorManagerImpl.frbInternalDcoDecode(raw as List<dynamic>);
+    return AudioRecognizerImpl.frbInternalDcoDecode(raw as List<dynamic>);
+  }
+
+  @protected
+  VideoFrameExtractor
+  dco_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerVideoFrameExtractor(
+    dynamic raw,
+  ) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return VideoFrameExtractorImpl.frbInternalDcoDecode(raw as List<dynamic>);
   }
 
   @protected
@@ -1064,49 +609,9 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  FrameCropConfig dco_decode_box_autoadd_frame_crop_config(dynamic raw) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    return dco_decode_frame_crop_config(raw);
-  }
-
-  @protected
-  FrameExtractedInfo dco_decode_box_autoadd_frame_extracted_info(dynamic raw) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    return dco_decode_frame_extracted_info(raw);
-  }
-
-  @protected
   XhsVideo dco_decode_box_autoadd_xhs_video(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return dco_decode_xhs_video(raw);
-  }
-
-  @protected
-  CroppedFrame dco_decode_cropped_frame(dynamic raw) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    final arr = raw as List<dynamic>;
-    if (arr.length != 5)
-      throw Exception('unexpected arr length: expect 5 but see ${arr.length}');
-    return CroppedFrame(
-      rgbData: dco_decode_list_prim_u_8_strict(arr[0]),
-      width: dco_decode_u_32(arr[1]),
-      height: dco_decode_u_32(arr[2]),
-      timestampMs: dco_decode_u_64(arr[3]),
-      frameNumber: dco_decode_u_64(arr[4]),
-    );
-  }
-
-  @protected
-  ExtractionConfig dco_decode_extraction_config(dynamic raw) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    final arr = raw as List<dynamic>;
-    if (arr.length != 3)
-      throw Exception('unexpected arr length: expect 3 but see ${arr.length}');
-    return ExtractionConfig(
-      stateConfig: dco_decode_state_config(arr[0]),
-      diffThreshold: dco_decode_f_32(arr[1]),
-      dedupThreshold: dco_decode_u_32(arr[2]),
-    );
   }
 
   @protected
@@ -1125,19 +630,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   double dco_decode_f_32(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return raw as double;
-  }
-
-  @protected
-  FrameCropConfig dco_decode_frame_crop_config(dynamic raw) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    final arr = raw as List<dynamic>;
-    if (arr.length != 3)
-      throw Exception('unexpected arr length: expect 3 but see ${arr.length}');
-    return FrameCropConfig(
-      topCropRatio: dco_decode_f_32(arr[0]),
-      bottomCropRatio: dco_decode_f_32(arr[1]),
-      outputSize: dco_decode_u_32(arr[2]),
-    );
   }
 
   @protected
@@ -1175,12 +667,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  List<CroppedFrame> dco_decode_list_cropped_frame(dynamic raw) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    return (raw as List<dynamic>).map(dco_decode_cropped_frame).toList();
-  }
-
-  @protected
   List<FrameExtractedInfo> dco_decode_list_frame_extracted_info(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return (raw as List<dynamic>).map(dco_decode_frame_extracted_info).toList();
@@ -1199,18 +685,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  Uint64List dco_decode_list_prim_u_64_strict(dynamic raw) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    return dcoDecodeUint64List(raw);
-  }
-
-  @protected
-  List<int> dco_decode_list_prim_u_8_loose(dynamic raw) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    return raw as List<int>;
-  }
-
-  @protected
   Uint8List dco_decode_list_prim_u_8_strict(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return raw as Uint8List;
@@ -1220,12 +694,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   List<YFrameData> dco_decode_list_y_frame_data(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return (raw as List<dynamic>).map(dco_decode_y_frame_data).toList();
-  }
-
-  @protected
-  List<YuvFrameData> dco_decode_list_yuv_frame_data(dynamic raw) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    return (raw as List<dynamic>).map(dco_decode_yuv_frame_data).toList();
   }
 
   @protected
@@ -1241,33 +709,9 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  FrameExtractedInfo? dco_decode_opt_box_autoadd_frame_extracted_info(
-    dynamic raw,
-  ) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    return raw == null
-        ? null
-        : dco_decode_box_autoadd_frame_extracted_info(raw);
-  }
-
-  @protected
   XhsVideo? dco_decode_opt_box_autoadd_xhs_video(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return raw == null ? null : dco_decode_box_autoadd_xhs_video(raw);
-  }
-
-  @protected
-  StateConfig dco_decode_state_config(dynamic raw) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    final arr = raw as List<dynamic>;
-    if (arr.length != 4)
-      throw Exception('unexpected arr length: expect 4 but see ${arr.length}');
-    return StateConfig(
-      initialSkip: dco_decode_u_32(arr[0]),
-      maxSkip: dco_decode_u_32(arr[1]),
-      minLockFrames: dco_decode_u_32(arr[2]),
-      cooldownFrames: dco_decode_u_32(arr[3]),
-    );
   }
 
   @protected
@@ -1370,23 +814,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  YuvFrameData dco_decode_yuv_frame_data(dynamic raw) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    final arr = raw as List<dynamic>;
-    if (arr.length != 7)
-      throw Exception('unexpected arr length: expect 7 but see ${arr.length}');
-    return YuvFrameData(
-      width: dco_decode_u_32(arr[0]),
-      height: dco_decode_u_32(arr[1]),
-      yPlane: dco_decode_list_prim_u_8_strict(arr[2]),
-      uPlane: dco_decode_list_prim_u_8_strict(arr[3]),
-      vPlane: dco_decode_list_prim_u_8_strict(arr[4]),
-      timestampMs: dco_decode_u_64(arr[5]),
-      frameNumber: dco_decode_u_64(arr[6]),
-    );
-  }
-
-  @protected
   AudioError
   sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerAudioError(
     SseDeserializer deserializer,
@@ -1399,24 +826,48 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  FrameExtractorManager
-  sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFrameExtractorManager(
+  AudioRecognizer
+  sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerAudioRecognizer(
     SseDeserializer deserializer,
   ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
-    return FrameExtractorManagerImpl.frbInternalSseDecode(
+    return AudioRecognizerImpl.frbInternalSseDecode(
       sse_decode_usize(deserializer),
       sse_decode_i_32(deserializer),
     );
   }
 
   @protected
-  FrameExtractorManager
-  sse_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFrameExtractorManager(
+  VideoFrameExtractor
+  sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerVideoFrameExtractor(
     SseDeserializer deserializer,
   ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
-    return FrameExtractorManagerImpl.frbInternalSseDecode(
+    return VideoFrameExtractorImpl.frbInternalSseDecode(
+      sse_decode_usize(deserializer),
+      sse_decode_i_32(deserializer),
+    );
+  }
+
+  @protected
+  AudioRecognizer
+  sse_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerAudioRecognizer(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return AudioRecognizerImpl.frbInternalSseDecode(
+      sse_decode_usize(deserializer),
+      sse_decode_i_32(deserializer),
+    );
+  }
+
+  @protected
+  VideoFrameExtractor
+  sse_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerVideoFrameExtractor(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return VideoFrameExtractorImpl.frbInternalSseDecode(
       sse_decode_usize(deserializer),
       sse_decode_i_32(deserializer),
     );
@@ -1435,12 +886,24 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  FrameExtractorManager
-  sse_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFrameExtractorManager(
+  AudioRecognizer
+  sse_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerAudioRecognizer(
     SseDeserializer deserializer,
   ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
-    return FrameExtractorManagerImpl.frbInternalSseDecode(
+    return AudioRecognizerImpl.frbInternalSseDecode(
+      sse_decode_usize(deserializer),
+      sse_decode_i_32(deserializer),
+    );
+  }
+
+  @protected
+  VideoFrameExtractor
+  sse_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerVideoFrameExtractor(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return VideoFrameExtractorImpl.frbInternalSseDecode(
       sse_decode_usize(deserializer),
       sse_decode_i_32(deserializer),
     );
@@ -1454,55 +917,9 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  FrameCropConfig sse_decode_box_autoadd_frame_crop_config(
-    SseDeserializer deserializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    return (sse_decode_frame_crop_config(deserializer));
-  }
-
-  @protected
-  FrameExtractedInfo sse_decode_box_autoadd_frame_extracted_info(
-    SseDeserializer deserializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    return (sse_decode_frame_extracted_info(deserializer));
-  }
-
-  @protected
   XhsVideo sse_decode_box_autoadd_xhs_video(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     return (sse_decode_xhs_video(deserializer));
-  }
-
-  @protected
-  CroppedFrame sse_decode_cropped_frame(SseDeserializer deserializer) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    var var_rgbData = sse_decode_list_prim_u_8_strict(deserializer);
-    var var_width = sse_decode_u_32(deserializer);
-    var var_height = sse_decode_u_32(deserializer);
-    var var_timestampMs = sse_decode_u_64(deserializer);
-    var var_frameNumber = sse_decode_u_64(deserializer);
-    return CroppedFrame(
-      rgbData: var_rgbData,
-      width: var_width,
-      height: var_height,
-      timestampMs: var_timestampMs,
-      frameNumber: var_frameNumber,
-    );
-  }
-
-  @protected
-  ExtractionConfig sse_decode_extraction_config(SseDeserializer deserializer) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    var var_stateConfig = sse_decode_state_config(deserializer);
-    var var_diffThreshold = sse_decode_f_32(deserializer);
-    var var_dedupThreshold = sse_decode_u_32(deserializer);
-    return ExtractionConfig(
-      stateConfig: var_stateConfig,
-      diffThreshold: var_diffThreshold,
-      dedupThreshold: var_dedupThreshold,
-    );
   }
 
   @protected
@@ -1520,19 +937,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   double sse_decode_f_32(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     return deserializer.buffer.getFloat32();
-  }
-
-  @protected
-  FrameCropConfig sse_decode_frame_crop_config(SseDeserializer deserializer) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    var var_topCropRatio = sse_decode_f_32(deserializer);
-    var var_bottomCropRatio = sse_decode_f_32(deserializer);
-    var var_outputSize = sse_decode_u_32(deserializer);
-    return FrameCropConfig(
-      topCropRatio: var_topCropRatio,
-      bottomCropRatio: var_bottomCropRatio,
-      outputSize: var_outputSize,
-    );
   }
 
   @protected
@@ -1581,20 +985,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  List<CroppedFrame> sse_decode_list_cropped_frame(
-    SseDeserializer deserializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-
-    var len_ = sse_decode_i_32(deserializer);
-    var ans_ = <CroppedFrame>[];
-    for (var idx_ = 0; idx_ < len_; ++idx_) {
-      ans_.add(sse_decode_cropped_frame(deserializer));
-    }
-    return ans_;
-  }
-
-  @protected
   List<FrameExtractedInfo> sse_decode_list_frame_extracted_info(
     SseDeserializer deserializer,
   ) {
@@ -1623,20 +1013,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  Uint64List sse_decode_list_prim_u_64_strict(SseDeserializer deserializer) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    var len_ = sse_decode_i_32(deserializer);
-    return deserializer.buffer.getUint64List(len_);
-  }
-
-  @protected
-  List<int> sse_decode_list_prim_u_8_loose(SseDeserializer deserializer) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    var len_ = sse_decode_i_32(deserializer);
-    return deserializer.buffer.getUint8List(len_);
-  }
-
-  @protected
   Uint8List sse_decode_list_prim_u_8_strict(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     var len_ = sse_decode_i_32(deserializer);
@@ -1651,20 +1027,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     var ans_ = <YFrameData>[];
     for (var idx_ = 0; idx_ < len_; ++idx_) {
       ans_.add(sse_decode_y_frame_data(deserializer));
-    }
-    return ans_;
-  }
-
-  @protected
-  List<YuvFrameData> sse_decode_list_yuv_frame_data(
-    SseDeserializer deserializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-
-    var len_ = sse_decode_i_32(deserializer);
-    var ans_ = <YuvFrameData>[];
-    for (var idx_ = 0; idx_ < len_; ++idx_) {
-      ans_.add(sse_decode_yuv_frame_data(deserializer));
     }
     return ans_;
   }
@@ -1688,19 +1050,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  FrameExtractedInfo? sse_decode_opt_box_autoadd_frame_extracted_info(
-    SseDeserializer deserializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-
-    if (sse_decode_bool(deserializer)) {
-      return (sse_decode_box_autoadd_frame_extracted_info(deserializer));
-    } else {
-      return null;
-    }
-  }
-
-  @protected
   XhsVideo? sse_decode_opt_box_autoadd_xhs_video(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
 
@@ -1709,21 +1058,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     } else {
       return null;
     }
-  }
-
-  @protected
-  StateConfig sse_decode_state_config(SseDeserializer deserializer) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    var var_initialSkip = sse_decode_u_32(deserializer);
-    var var_maxSkip = sse_decode_u_32(deserializer);
-    var var_minLockFrames = sse_decode_u_32(deserializer);
-    var var_cooldownFrames = sse_decode_u_32(deserializer);
-    return StateConfig(
-      initialSkip: var_initialSkip,
-      maxSkip: var_maxSkip,
-      minLockFrames: var_minLockFrames,
-      cooldownFrames: var_cooldownFrames,
-    );
   }
 
   @protected
@@ -1826,27 +1160,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  YuvFrameData sse_decode_yuv_frame_data(SseDeserializer deserializer) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    var var_width = sse_decode_u_32(deserializer);
-    var var_height = sse_decode_u_32(deserializer);
-    var var_yPlane = sse_decode_list_prim_u_8_strict(deserializer);
-    var var_uPlane = sse_decode_list_prim_u_8_strict(deserializer);
-    var var_vPlane = sse_decode_list_prim_u_8_strict(deserializer);
-    var var_timestampMs = sse_decode_u_64(deserializer);
-    var var_frameNumber = sse_decode_u_64(deserializer);
-    return YuvFrameData(
-      width: var_width,
-      height: var_height,
-      yPlane: var_yPlane,
-      uPlane: var_uPlane,
-      vPlane: var_vPlane,
-      timestampMs: var_timestampMs,
-      frameNumber: var_frameNumber,
-    );
-  }
-
-  @protected
   bool sse_decode_bool(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     return deserializer.buffer.getUint8() != 0;
@@ -1867,26 +1180,52 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   @protected
   void
-  sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFrameExtractorManager(
-    FrameExtractorManager self,
+  sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerAudioRecognizer(
+    AudioRecognizer self,
     SseSerializer serializer,
   ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_usize(
-      (self as FrameExtractorManagerImpl).frbInternalSseEncode(move: true),
+      (self as AudioRecognizerImpl).frbInternalSseEncode(move: true),
       serializer,
     );
   }
 
   @protected
   void
-  sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFrameExtractorManager(
-    FrameExtractorManager self,
+  sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerVideoFrameExtractor(
+    VideoFrameExtractor self,
     SseSerializer serializer,
   ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_usize(
-      (self as FrameExtractorManagerImpl).frbInternalSseEncode(move: false),
+      (self as VideoFrameExtractorImpl).frbInternalSseEncode(move: true),
+      serializer,
+    );
+  }
+
+  @protected
+  void
+  sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerAudioRecognizer(
+    AudioRecognizer self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_usize(
+      (self as AudioRecognizerImpl).frbInternalSseEncode(move: false),
+      serializer,
+    );
+  }
+
+  @protected
+  void
+  sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerVideoFrameExtractor(
+    VideoFrameExtractor self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_usize(
+      (self as VideoFrameExtractorImpl).frbInternalSseEncode(move: false),
       serializer,
     );
   }
@@ -1906,13 +1245,26 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   @protected
   void
-  sse_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFrameExtractorManager(
-    FrameExtractorManager self,
+  sse_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerAudioRecognizer(
+    AudioRecognizer self,
     SseSerializer serializer,
   ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_usize(
-      (self as FrameExtractorManagerImpl).frbInternalSseEncode(move: null),
+      (self as AudioRecognizerImpl).frbInternalSseEncode(move: null),
+      serializer,
+    );
+  }
+
+  @protected
+  void
+  sse_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerVideoFrameExtractor(
+    VideoFrameExtractor self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_usize(
+      (self as VideoFrameExtractorImpl).frbInternalSseEncode(move: null),
       serializer,
     );
   }
@@ -1924,51 +1276,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  void sse_encode_box_autoadd_frame_crop_config(
-    FrameCropConfig self,
-    SseSerializer serializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_frame_crop_config(self, serializer);
-  }
-
-  @protected
-  void sse_encode_box_autoadd_frame_extracted_info(
-    FrameExtractedInfo self,
-    SseSerializer serializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_frame_extracted_info(self, serializer);
-  }
-
-  @protected
   void sse_encode_box_autoadd_xhs_video(
     XhsVideo self,
     SseSerializer serializer,
   ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_xhs_video(self, serializer);
-  }
-
-  @protected
-  void sse_encode_cropped_frame(CroppedFrame self, SseSerializer serializer) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_list_prim_u_8_strict(self.rgbData, serializer);
-    sse_encode_u_32(self.width, serializer);
-    sse_encode_u_32(self.height, serializer);
-    sse_encode_u_64(self.timestampMs, serializer);
-    sse_encode_u_64(self.frameNumber, serializer);
-  }
-
-  @protected
-  void sse_encode_extraction_config(
-    ExtractionConfig self,
-    SseSerializer serializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_state_config(self.stateConfig, serializer);
-    sse_encode_f_32(self.diffThreshold, serializer);
-    sse_encode_u_32(self.dedupThreshold, serializer);
   }
 
   @protected
@@ -1985,17 +1298,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   void sse_encode_f_32(double self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     serializer.buffer.putFloat32(self);
-  }
-
-  @protected
-  void sse_encode_frame_crop_config(
-    FrameCropConfig self,
-    SseSerializer serializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_f_32(self.topCropRatio, serializer);
-    sse_encode_f_32(self.bottomCropRatio, serializer);
-    sse_encode_u_32(self.outputSize, serializer);
   }
 
   @protected
@@ -2034,18 +1336,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  void sse_encode_list_cropped_frame(
-    List<CroppedFrame> self,
-    SseSerializer serializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_i_32(self.length, serializer);
-    for (final item in self) {
-      sse_encode_cropped_frame(item, serializer);
-    }
-  }
-
-  @protected
   void sse_encode_list_frame_extracted_info(
     List<FrameExtractedInfo> self,
     SseSerializer serializer,
@@ -2080,28 +1370,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  void sse_encode_list_prim_u_64_strict(
-    Uint64List self,
-    SseSerializer serializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_i_32(self.length, serializer);
-    serializer.buffer.putUint64List(self);
-  }
-
-  @protected
-  void sse_encode_list_prim_u_8_loose(
-    List<int> self,
-    SseSerializer serializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_i_32(self.length, serializer);
-    serializer.buffer.putUint8List(
-      self is Uint8List ? self : Uint8List.fromList(self),
-    );
-  }
-
-  @protected
   void sse_encode_list_prim_u_8_strict(
     Uint8List self,
     SseSerializer serializer,
@@ -2124,18 +1392,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  void sse_encode_list_yuv_frame_data(
-    List<YuvFrameData> self,
-    SseSerializer serializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_i_32(self.length, serializer);
-    for (final item in self) {
-      sse_encode_yuv_frame_data(item, serializer);
-    }
-  }
-
-  @protected
   void sse_encode_note_type(NoteType self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_i_32(self.index, serializer);
@@ -2152,19 +1408,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  void sse_encode_opt_box_autoadd_frame_extracted_info(
-    FrameExtractedInfo? self,
-    SseSerializer serializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-
-    sse_encode_bool(self != null, serializer);
-    if (self != null) {
-      sse_encode_box_autoadd_frame_extracted_info(self, serializer);
-    }
-  }
-
-  @protected
   void sse_encode_opt_box_autoadd_xhs_video(
     XhsVideo? self,
     SseSerializer serializer,
@@ -2175,15 +1418,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     if (self != null) {
       sse_encode_box_autoadd_xhs_video(self, serializer);
     }
-  }
-
-  @protected
-  void sse_encode_state_config(StateConfig self, SseSerializer serializer) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_u_32(self.initialSkip, serializer);
-    sse_encode_u_32(self.maxSkip, serializer);
-    sse_encode_u_32(self.minLockFrames, serializer);
-    sse_encode_u_32(self.cooldownFrames, serializer);
   }
 
   @protected
@@ -2260,18 +1494,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  void sse_encode_yuv_frame_data(YuvFrameData self, SseSerializer serializer) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_u_32(self.width, serializer);
-    sse_encode_u_32(self.height, serializer);
-    sse_encode_list_prim_u_8_strict(self.yPlane, serializer);
-    sse_encode_list_prim_u_8_strict(self.uPlane, serializer);
-    sse_encode_list_prim_u_8_strict(self.vPlane, serializer);
-    sse_encode_u_64(self.timestampMs, serializer);
-    sse_encode_u_64(self.frameNumber, serializer);
-  }
-
-  @protected
   void sse_encode_bool(bool self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     serializer.buffer.putUint8(self ? 1 : 0);
@@ -2299,14 +1521,58 @@ class AudioErrorImpl extends RustOpaque implements AudioError {
 }
 
 @sealed
-class FrameExtractorManagerImpl extends RustOpaque
-    implements FrameExtractorManager {
+class AudioRecognizerImpl extends RustOpaque implements AudioRecognizer {
   // Not to be used by end users
-  FrameExtractorManagerImpl.frbInternalDcoDecode(List<dynamic> wire)
+  AudioRecognizerImpl.frbInternalDcoDecode(List<dynamic> wire)
     : super.frbInternalDcoDecode(wire, _kStaticData);
 
   // Not to be used by end users
-  FrameExtractorManagerImpl.frbInternalSseDecode(
+  AudioRecognizerImpl.frbInternalSseDecode(BigInt ptr, int externalSizeOnNative)
+    : super.frbInternalSseDecode(ptr, externalSizeOnNative, _kStaticData);
+
+  static final _kStaticData = RustArcStaticData(
+    rustArcIncrementStrongCount:
+        RustLib.instance.api.rust_arc_increment_strong_count_AudioRecognizer,
+    rustArcDecrementStrongCount:
+        RustLib.instance.api.rust_arc_decrement_strong_count_AudioRecognizer,
+    rustArcDecrementStrongCountPtr:
+        RustLib.instance.api.rust_arc_decrement_strong_count_AudioRecognizerPtr,
+  );
+
+  /// 获取模型目录
+  String get modelsDir =>
+      RustLib.instance.api.crateApiAudioAudioRecognizerModelsDir(that: this);
+
+  /// 转录音频文件（WAV 格式）
+  Future<String> transcribeAudio({required String path, String? language}) =>
+      RustLib.instance.api.crateApiAudioAudioRecognizerTranscribeAudio(
+        that: this,
+        path: path,
+        language: language,
+      );
+
+  /// 转录 PCM 数据
+  Future<String> transcribePcm({
+    required List<double> pcm,
+    required int sampleRate,
+    String? language,
+  }) => RustLib.instance.api.crateApiAudioAudioRecognizerTranscribePcm(
+    that: this,
+    pcm: pcm,
+    sampleRate: sampleRate,
+    language: language,
+  );
+}
+
+@sealed
+class VideoFrameExtractorImpl extends RustOpaque
+    implements VideoFrameExtractor {
+  // Not to be used by end users
+  VideoFrameExtractorImpl.frbInternalDcoDecode(List<dynamic> wire)
+    : super.frbInternalDcoDecode(wire, _kStaticData);
+
+  // Not to be used by end users
+  VideoFrameExtractorImpl.frbInternalSseDecode(
     BigInt ptr,
     int externalSizeOnNative,
   ) : super.frbInternalSseDecode(ptr, externalSizeOnNative, _kStaticData);
@@ -2315,78 +1581,30 @@ class FrameExtractorManagerImpl extends RustOpaque
     rustArcIncrementStrongCount: RustLib
         .instance
         .api
-        .rust_arc_increment_strong_count_FrameExtractorManager,
+        .rust_arc_increment_strong_count_VideoFrameExtractor,
     rustArcDecrementStrongCount: RustLib
         .instance
         .api
-        .rust_arc_decrement_strong_count_FrameExtractorManager,
+        .rust_arc_decrement_strong_count_VideoFrameExtractor,
     rustArcDecrementStrongCountPtr: RustLib
         .instance
         .api
-        .rust_arc_decrement_strong_count_FrameExtractorManagerPtr,
+        .rust_arc_decrement_strong_count_VideoFrameExtractorPtr,
   );
 
-  ExtractionStats getStats() => RustLib.instance.api
-      .crateApiVideoFrameExtractorManagerGetStats(that: this);
-
-  /// 异步批量处理 - 智能文字状态去重
-  /// 策略：先裁剪缩放，再判断"有没有文字"，再判断"文字变没变"
+  /// 批量处理帧（智能去重）
   Future<List<FrameExtractedInfo>> processBatch({
     required List<YFrameData> frames,
-  }) => RustLib.instance.api.crateApiVideoFrameExtractorManagerProcessBatch(
+  }) => RustLib.instance.api.crateApiVideoVideoFrameExtractorProcessBatch(
     that: this,
     frames: frames,
   );
 
-  FrameExtractedInfo? processFrame({
-    required int width,
-    required int height,
-    required List<int> rgbaData,
-    required BigInt timestampMs,
-    required BigInt frameNumber,
-  }) => RustLib.instance.api.crateApiVideoFrameExtractorManagerProcessFrame(
-    that: this,
-    width: width,
-    height: height,
-    rgbaData: rgbaData,
-    timestampMs: timestampMs,
-    frameNumber: frameNumber,
-  );
-
-  FrameExtractedInfo? processYFrame({
-    required int width,
-    required int height,
-    required List<int> yPlane,
-    required BigInt timestampMs,
-    required BigInt frameNumber,
-  }) => RustLib.instance.api.crateApiVideoFrameExtractorManagerProcessYFrame(
-    that: this,
-    width: width,
-    height: height,
-    yPlane: yPlane,
-    timestampMs: timestampMs,
-    frameNumber: frameNumber,
-  );
-
-  FrameExtractedInfo? processYuvFrame({
-    required int width,
-    required int height,
-    required List<int> yPlane,
-    required List<int> uPlane,
-    required List<int> vPlane,
-    required BigInt timestampMs,
-    required BigInt frameNumber,
-  }) => RustLib.instance.api.crateApiVideoFrameExtractorManagerProcessYuvFrame(
-    that: this,
-    width: width,
-    height: height,
-    yPlane: yPlane,
-    uPlane: uPlane,
-    vPlane: vPlane,
-    timestampMs: timestampMs,
-    frameNumber: frameNumber,
-  );
-
+  /// 重置状态
   void reset() =>
-      RustLib.instance.api.crateApiVideoFrameExtractorManagerReset(that: this);
+      RustLib.instance.api.crateApiVideoVideoFrameExtractorReset(that: this);
+
+  /// 获取提取统计
+  ExtractionStats get stats =>
+      RustLib.instance.api.crateApiVideoVideoFrameExtractorStats(that: this);
 }

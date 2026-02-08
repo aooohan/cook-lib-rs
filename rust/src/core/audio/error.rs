@@ -10,6 +10,8 @@ pub enum AudioError {
     Resample(String),
     #[error("Model not initialized")]
     NotInitialized,
+    #[error("Model load failed: {0}")]
+    ModelLoadFailed(String),
     #[error("Sherpa-NCNN error: {0}")]
     SherpaNcnn(String),
 }

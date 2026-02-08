@@ -25,6 +25,7 @@
 
 // Section: imports
 
+use crate::api::audio::*;
 use crate::api::video::*;
 use crate::core::audio::error::*;
 use flutter_rust_bridge::for_generated::byteorder::{NativeEndian, ReadBytesExt, WriteBytesExt};
@@ -39,7 +40,7 @@ flutter_rust_bridge::frb_generated_boilerplate!(
     default_rust_auto_opaque = RustAutoOpaqueMoi,
 );
 pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_VERSION: &str = "2.11.1";
-pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_CONTENT_HASH: i32 = -678905927;
+pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_CONTENT_HASH: i32 = 1919093226;
 
 // Section: executor
 
@@ -47,14 +48,51 @@ flutter_rust_bridge::frb_generated_default_handler!();
 
 // Section: wire_funcs
 
-fn wire__crate__api__video__FrameExtractorManager_get_stats_impl(
+fn wire__crate__api__audio__AudioRecognizer_create_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_async::<flutter_rust_bridge::for_generated::SseCodec, _, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "AudioRecognizer_create",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_models_dir = <String>::sse_decode(&mut deserializer);
+            deserializer.end();
+            move |context| async move {
+                transform_result_sse::<_, AudioError>(
+                    (move || async move {
+                        let output_ok =
+                            crate::api::audio::AudioRecognizer::create(api_models_dir).await?;
+                        Ok(output_ok)
+                    })()
+                    .await,
+                )
+            }
+        },
+    )
+}
+fn wire__crate__api__audio__AudioRecognizer_models_dir_impl(
     ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
     rust_vec_len_: i32,
     data_len_: i32,
 ) -> flutter_rust_bridge::for_generated::WireSyncRust2DartSse {
     FLUTTER_RUST_BRIDGE_HANDLER.wrap_sync::<flutter_rust_bridge::for_generated::SseCodec, _>(
         flutter_rust_bridge::for_generated::TaskInfo {
-            debug_name: "FrameExtractorManager_get_stats",
+            debug_name: "AudioRecognizer_models_dir",
             port: None,
             mode: flutter_rust_bridge::for_generated::FfiCallMode::Sync,
         },
@@ -69,7 +107,7 @@ fn wire__crate__api__video__FrameExtractorManager_get_stats_impl(
             let mut deserializer =
                 flutter_rust_bridge::for_generated::SseDeserializer::new(message);
             let api_that = <RustOpaqueMoi<
-                flutter_rust_bridge::for_generated::RustAutoOpaqueInner<FrameExtractorManager>,
+                flutter_rust_bridge::for_generated::RustAutoOpaqueInner<AudioRecognizer>,
             >>::sse_decode(&mut deserializer);
             deserializer.end();
             transform_result_sse::<_, ()>((move || {
@@ -88,21 +126,147 @@ fn wire__crate__api__video__FrameExtractorManager_get_stats_impl(
                 }
                 let api_that_guard = api_that_guard.unwrap();
                 let output_ok = Result::<_, ()>::Ok(
-                    crate::api::video::FrameExtractorManager::get_stats(&*api_that_guard),
+                    crate::api::audio::AudioRecognizer::models_dir(&*api_that_guard),
                 )?;
                 Ok(output_ok)
             })())
         },
     )
 }
-fn wire__crate__api__video__FrameExtractorManager_new_impl(
+fn wire__crate__api__audio__AudioRecognizer_transcribe_audio_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_async::<flutter_rust_bridge::for_generated::SseCodec, _, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "AudioRecognizer_transcribe_audio",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_that = <RustOpaqueMoi<
+                flutter_rust_bridge::for_generated::RustAutoOpaqueInner<AudioRecognizer>,
+            >>::sse_decode(&mut deserializer);
+            let api_path = <String>::sse_decode(&mut deserializer);
+            let api_language = <Option<String>>::sse_decode(&mut deserializer);
+            deserializer.end();
+            move |context| async move {
+                transform_result_sse::<_, AudioError>(
+                    (move || async move {
+                        let mut api_that_guard = None;
+                        let decode_indices_ =
+                            flutter_rust_bridge::for_generated::lockable_compute_decode_order(
+                                vec![flutter_rust_bridge::for_generated::LockableOrderInfo::new(
+                                    &api_that, 0, false,
+                                )],
+                            );
+                        for i in decode_indices_ {
+                            match i {
+                                0 => {
+                                    api_that_guard =
+                                        Some(api_that.lockable_decode_async_ref().await)
+                                }
+                                _ => unreachable!(),
+                            }
+                        }
+                        let api_that_guard = api_that_guard.unwrap();
+                        let output_ok = crate::api::audio::AudioRecognizer::transcribe_audio(
+                            &*api_that_guard,
+                            api_path,
+                            api_language,
+                        )
+                        .await?;
+                        Ok(output_ok)
+                    })()
+                    .await,
+                )
+            }
+        },
+    )
+}
+fn wire__crate__api__audio__AudioRecognizer_transcribe_pcm_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_async::<flutter_rust_bridge::for_generated::SseCodec, _, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "AudioRecognizer_transcribe_pcm",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_that = <RustOpaqueMoi<
+                flutter_rust_bridge::for_generated::RustAutoOpaqueInner<AudioRecognizer>,
+            >>::sse_decode(&mut deserializer);
+            let api_pcm = <Vec<f32>>::sse_decode(&mut deserializer);
+            let api_sample_rate = <u32>::sse_decode(&mut deserializer);
+            let api_language = <Option<String>>::sse_decode(&mut deserializer);
+            deserializer.end();
+            move |context| async move {
+                transform_result_sse::<_, AudioError>(
+                    (move || async move {
+                        let mut api_that_guard = None;
+                        let decode_indices_ =
+                            flutter_rust_bridge::for_generated::lockable_compute_decode_order(
+                                vec![flutter_rust_bridge::for_generated::LockableOrderInfo::new(
+                                    &api_that, 0, false,
+                                )],
+                            );
+                        for i in decode_indices_ {
+                            match i {
+                                0 => {
+                                    api_that_guard =
+                                        Some(api_that.lockable_decode_async_ref().await)
+                                }
+                                _ => unreachable!(),
+                            }
+                        }
+                        let api_that_guard = api_that_guard.unwrap();
+                        let output_ok = crate::api::audio::AudioRecognizer::transcribe_pcm(
+                            &*api_that_guard,
+                            api_pcm,
+                            api_sample_rate,
+                            api_language,
+                        )
+                        .await?;
+                        Ok(output_ok)
+                    })()
+                    .await,
+                )
+            }
+        },
+    )
+}
+fn wire__crate__api__video__VideoFrameExtractor_create_impl(
     ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
     rust_vec_len_: i32,
     data_len_: i32,
 ) -> flutter_rust_bridge::for_generated::WireSyncRust2DartSse {
     FLUTTER_RUST_BRIDGE_HANDLER.wrap_sync::<flutter_rust_bridge::for_generated::SseCodec, _>(
         flutter_rust_bridge::for_generated::TaskInfo {
-            debug_name: "FrameExtractorManager_new",
+            debug_name: "VideoFrameExtractor_create",
             port: None,
             mode: flutter_rust_bridge::for_generated::FfiCallMode::Sync,
         },
@@ -119,13 +283,13 @@ fn wire__crate__api__video__FrameExtractorManager_new_impl(
             deserializer.end();
             transform_result_sse::<_, ()>((move || {
                 let output_ok =
-                    Result::<_, ()>::Ok(crate::api::video::FrameExtractorManager::new())?;
+                    Result::<_, ()>::Ok(crate::api::video::VideoFrameExtractor::create())?;
                 Ok(output_ok)
             })())
         },
     )
 }
-fn wire__crate__api__video__FrameExtractorManager_process_batch_impl(
+fn wire__crate__api__video__VideoFrameExtractor_process_batch_impl(
     port_: flutter_rust_bridge::for_generated::MessagePort,
     ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
     rust_vec_len_: i32,
@@ -133,7 +297,7 @@ fn wire__crate__api__video__FrameExtractorManager_process_batch_impl(
 ) {
     FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::SseCodec, _, _>(
         flutter_rust_bridge::for_generated::TaskInfo {
-            debug_name: "FrameExtractorManager_process_batch",
+            debug_name: "VideoFrameExtractor_process_batch",
             port: Some(port_),
             mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
         },
@@ -148,9 +312,10 @@ fn wire__crate__api__video__FrameExtractorManager_process_batch_impl(
             let mut deserializer =
                 flutter_rust_bridge::for_generated::SseDeserializer::new(message);
             let api_that = <RustOpaqueMoi<
-                flutter_rust_bridge::for_generated::RustAutoOpaqueInner<FrameExtractorManager>,
+                flutter_rust_bridge::for_generated::RustAutoOpaqueInner<VideoFrameExtractor>,
             >>::sse_decode(&mut deserializer);
-            let api_frames = <Vec<crate::api::video::YFrameData>>::sse_decode(&mut deserializer);
+            let api_frames =
+                <Vec<crate::core::video::manager::YFrameData>>::sse_decode(&mut deserializer);
             deserializer.end();
             move |context| {
                 transform_result_sse::<_, ()>((move || {
@@ -169,7 +334,7 @@ fn wire__crate__api__video__FrameExtractorManager_process_batch_impl(
                     }
                     let api_that_guard = api_that_guard.unwrap();
                     let output_ok = Result::<_, ()>::Ok(
-                        crate::api::video::FrameExtractorManager::process_batch(
+                        crate::api::video::VideoFrameExtractor::process_batch(
                             &*api_that_guard,
                             api_frames,
                         ),
@@ -180,14 +345,14 @@ fn wire__crate__api__video__FrameExtractorManager_process_batch_impl(
         },
     )
 }
-fn wire__crate__api__video__FrameExtractorManager_process_frame_impl(
+fn wire__crate__api__video__VideoFrameExtractor_reset_impl(
     ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
     rust_vec_len_: i32,
     data_len_: i32,
 ) -> flutter_rust_bridge::for_generated::WireSyncRust2DartSse {
     FLUTTER_RUST_BRIDGE_HANDLER.wrap_sync::<flutter_rust_bridge::for_generated::SseCodec, _>(
         flutter_rust_bridge::for_generated::TaskInfo {
-            debug_name: "FrameExtractorManager_process_frame",
+            debug_name: "VideoFrameExtractor_reset",
             port: None,
             mode: flutter_rust_bridge::for_generated::FfiCallMode::Sync,
         },
@@ -202,190 +367,7 @@ fn wire__crate__api__video__FrameExtractorManager_process_frame_impl(
             let mut deserializer =
                 flutter_rust_bridge::for_generated::SseDeserializer::new(message);
             let api_that = <RustOpaqueMoi<
-                flutter_rust_bridge::for_generated::RustAutoOpaqueInner<FrameExtractorManager>,
-            >>::sse_decode(&mut deserializer);
-            let api_width = <u32>::sse_decode(&mut deserializer);
-            let api_height = <u32>::sse_decode(&mut deserializer);
-            let api_rgba_data = <Vec<u8>>::sse_decode(&mut deserializer);
-            let api_timestamp_ms = <u64>::sse_decode(&mut deserializer);
-            let api_frame_number = <u64>::sse_decode(&mut deserializer);
-            deserializer.end();
-            transform_result_sse::<_, ()>((move || {
-                let mut api_that_guard = None;
-                let decode_indices_ =
-                    flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![
-                        flutter_rust_bridge::for_generated::LockableOrderInfo::new(
-                            &api_that, 0, false,
-                        ),
-                    ]);
-                for i in decode_indices_ {
-                    match i {
-                        0 => api_that_guard = Some(api_that.lockable_decode_sync_ref()),
-                        _ => unreachable!(),
-                    }
-                }
-                let api_that_guard = api_that_guard.unwrap();
-                let output_ok =
-                    Result::<_, ()>::Ok(crate::api::video::FrameExtractorManager::process_frame(
-                        &*api_that_guard,
-                        api_width,
-                        api_height,
-                        api_rgba_data,
-                        api_timestamp_ms,
-                        api_frame_number,
-                    ))?;
-                Ok(output_ok)
-            })())
-        },
-    )
-}
-fn wire__crate__api__video__FrameExtractorManager_process_y_frame_impl(
-    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
-    rust_vec_len_: i32,
-    data_len_: i32,
-) -> flutter_rust_bridge::for_generated::WireSyncRust2DartSse {
-    FLUTTER_RUST_BRIDGE_HANDLER.wrap_sync::<flutter_rust_bridge::for_generated::SseCodec, _>(
-        flutter_rust_bridge::for_generated::TaskInfo {
-            debug_name: "FrameExtractorManager_process_y_frame",
-            port: None,
-            mode: flutter_rust_bridge::for_generated::FfiCallMode::Sync,
-        },
-        move || {
-            let message = unsafe {
-                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
-                    ptr_,
-                    rust_vec_len_,
-                    data_len_,
-                )
-            };
-            let mut deserializer =
-                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
-            let api_that = <RustOpaqueMoi<
-                flutter_rust_bridge::for_generated::RustAutoOpaqueInner<FrameExtractorManager>,
-            >>::sse_decode(&mut deserializer);
-            let api_width = <u32>::sse_decode(&mut deserializer);
-            let api_height = <u32>::sse_decode(&mut deserializer);
-            let api_y_plane = <Vec<u8>>::sse_decode(&mut deserializer);
-            let api_timestamp_ms = <u64>::sse_decode(&mut deserializer);
-            let api_frame_number = <u64>::sse_decode(&mut deserializer);
-            deserializer.end();
-            transform_result_sse::<_, ()>((move || {
-                let mut api_that_guard = None;
-                let decode_indices_ =
-                    flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![
-                        flutter_rust_bridge::for_generated::LockableOrderInfo::new(
-                            &api_that, 0, false,
-                        ),
-                    ]);
-                for i in decode_indices_ {
-                    match i {
-                        0 => api_that_guard = Some(api_that.lockable_decode_sync_ref()),
-                        _ => unreachable!(),
-                    }
-                }
-                let api_that_guard = api_that_guard.unwrap();
-                let output_ok = Result::<_, ()>::Ok(
-                    crate::api::video::FrameExtractorManager::process_y_frame(
-                        &*api_that_guard,
-                        api_width,
-                        api_height,
-                        api_y_plane,
-                        api_timestamp_ms,
-                        api_frame_number,
-                    ),
-                )?;
-                Ok(output_ok)
-            })())
-        },
-    )
-}
-fn wire__crate__api__video__FrameExtractorManager_process_yuv_frame_impl(
-    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
-    rust_vec_len_: i32,
-    data_len_: i32,
-) -> flutter_rust_bridge::for_generated::WireSyncRust2DartSse {
-    FLUTTER_RUST_BRIDGE_HANDLER.wrap_sync::<flutter_rust_bridge::for_generated::SseCodec, _>(
-        flutter_rust_bridge::for_generated::TaskInfo {
-            debug_name: "FrameExtractorManager_process_yuv_frame",
-            port: None,
-            mode: flutter_rust_bridge::for_generated::FfiCallMode::Sync,
-        },
-        move || {
-            let message = unsafe {
-                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
-                    ptr_,
-                    rust_vec_len_,
-                    data_len_,
-                )
-            };
-            let mut deserializer =
-                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
-            let api_that = <RustOpaqueMoi<
-                flutter_rust_bridge::for_generated::RustAutoOpaqueInner<FrameExtractorManager>,
-            >>::sse_decode(&mut deserializer);
-            let api_width = <u32>::sse_decode(&mut deserializer);
-            let api_height = <u32>::sse_decode(&mut deserializer);
-            let api_y_plane = <Vec<u8>>::sse_decode(&mut deserializer);
-            let api_u_plane = <Vec<u8>>::sse_decode(&mut deserializer);
-            let api_v_plane = <Vec<u8>>::sse_decode(&mut deserializer);
-            let api_timestamp_ms = <u64>::sse_decode(&mut deserializer);
-            let api_frame_number = <u64>::sse_decode(&mut deserializer);
-            deserializer.end();
-            transform_result_sse::<_, ()>((move || {
-                let mut api_that_guard = None;
-                let decode_indices_ =
-                    flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![
-                        flutter_rust_bridge::for_generated::LockableOrderInfo::new(
-                            &api_that, 0, false,
-                        ),
-                    ]);
-                for i in decode_indices_ {
-                    match i {
-                        0 => api_that_guard = Some(api_that.lockable_decode_sync_ref()),
-                        _ => unreachable!(),
-                    }
-                }
-                let api_that_guard = api_that_guard.unwrap();
-                let output_ok = Result::<_, ()>::Ok(
-                    crate::api::video::FrameExtractorManager::process_yuv_frame(
-                        &*api_that_guard,
-                        api_width,
-                        api_height,
-                        api_y_plane,
-                        api_u_plane,
-                        api_v_plane,
-                        api_timestamp_ms,
-                        api_frame_number,
-                    ),
-                )?;
-                Ok(output_ok)
-            })())
-        },
-    )
-}
-fn wire__crate__api__video__FrameExtractorManager_reset_impl(
-    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
-    rust_vec_len_: i32,
-    data_len_: i32,
-) -> flutter_rust_bridge::for_generated::WireSyncRust2DartSse {
-    FLUTTER_RUST_BRIDGE_HANDLER.wrap_sync::<flutter_rust_bridge::for_generated::SseCodec, _>(
-        flutter_rust_bridge::for_generated::TaskInfo {
-            debug_name: "FrameExtractorManager_reset",
-            port: None,
-            mode: flutter_rust_bridge::for_generated::FfiCallMode::Sync,
-        },
-        move || {
-            let message = unsafe {
-                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
-                    ptr_,
-                    rust_vec_len_,
-                    data_len_,
-                )
-            };
-            let mut deserializer =
-                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
-            let api_that = <RustOpaqueMoi<
-                flutter_rust_bridge::for_generated::RustAutoOpaqueInner<FrameExtractorManager>,
+                flutter_rust_bridge::for_generated::RustAutoOpaqueInner<VideoFrameExtractor>,
             >>::sse_decode(&mut deserializer);
             deserializer.end();
             transform_result_sse::<_, ()>((move || {
@@ -404,21 +386,21 @@ fn wire__crate__api__video__FrameExtractorManager_reset_impl(
                 }
                 let api_that_guard = api_that_guard.unwrap();
                 let output_ok = Result::<_, ()>::Ok({
-                    crate::api::video::FrameExtractorManager::reset(&*api_that_guard);
+                    crate::api::video::VideoFrameExtractor::reset(&*api_that_guard);
                 })?;
                 Ok(output_ok)
             })())
         },
     )
 }
-fn wire__crate__api__video__FrameExtractorManager_with_mock_detector_impl(
+fn wire__crate__api__video__VideoFrameExtractor_stats_impl(
     ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
     rust_vec_len_: i32,
     data_len_: i32,
 ) -> flutter_rust_bridge::for_generated::WireSyncRust2DartSse {
     FLUTTER_RUST_BRIDGE_HANDLER.wrap_sync::<flutter_rust_bridge::for_generated::SseCodec, _>(
         flutter_rust_bridge::for_generated::TaskInfo {
-            debug_name: "FrameExtractorManager_with_mock_detector",
+            debug_name: "VideoFrameExtractor_stats",
             port: None,
             mode: flutter_rust_bridge::for_generated::FfiCallMode::Sync,
         },
@@ -432,355 +414,28 @@ fn wire__crate__api__video__FrameExtractorManager_with_mock_detector_impl(
             };
             let mut deserializer =
                 flutter_rust_bridge::for_generated::SseDeserializer::new(message);
-            let api_text_frames = <Vec<u64>>::sse_decode(&mut deserializer);
+            let api_that = <RustOpaqueMoi<
+                flutter_rust_bridge::for_generated::RustAutoOpaqueInner<VideoFrameExtractor>,
+            >>::sse_decode(&mut deserializer);
             deserializer.end();
             transform_result_sse::<_, ()>((move || {
+                let mut api_that_guard = None;
+                let decode_indices_ =
+                    flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![
+                        flutter_rust_bridge::for_generated::LockableOrderInfo::new(
+                            &api_that, 0, false,
+                        ),
+                    ]);
+                for i in decode_indices_ {
+                    match i {
+                        0 => api_that_guard = Some(api_that.lockable_decode_sync_ref()),
+                        _ => unreachable!(),
+                    }
+                }
+                let api_that_guard = api_that_guard.unwrap();
                 let output_ok = Result::<_, ()>::Ok(
-                    crate::api::video::FrameExtractorManager::with_mock_detector(api_text_frames),
+                    crate::api::video::VideoFrameExtractor::stats(&*api_that_guard),
                 )?;
-                Ok(output_ok)
-            })())
-        },
-    )
-}
-fn wire__crate__api__video__create_high_motion_config_impl(
-    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
-    rust_vec_len_: i32,
-    data_len_: i32,
-) -> flutter_rust_bridge::for_generated::WireSyncRust2DartSse {
-    FLUTTER_RUST_BRIDGE_HANDLER.wrap_sync::<flutter_rust_bridge::for_generated::SseCodec, _>(
-        flutter_rust_bridge::for_generated::TaskInfo {
-            debug_name: "create_high_motion_config",
-            port: None,
-            mode: flutter_rust_bridge::for_generated::FfiCallMode::Sync,
-        },
-        move || {
-            let message = unsafe {
-                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
-                    ptr_,
-                    rust_vec_len_,
-                    data_len_,
-                )
-            };
-            let mut deserializer =
-                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
-            deserializer.end();
-            transform_result_sse::<_, ()>((move || {
-                let output_ok =
-                    Result::<_, ()>::Ok(crate::api::video::create_high_motion_config())?;
-                Ok(output_ok)
-            })())
-        },
-    )
-}
-fn wire__crate__api__video__create_low_motion_config_impl(
-    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
-    rust_vec_len_: i32,
-    data_len_: i32,
-) -> flutter_rust_bridge::for_generated::WireSyncRust2DartSse {
-    FLUTTER_RUST_BRIDGE_HANDLER.wrap_sync::<flutter_rust_bridge::for_generated::SseCodec, _>(
-        flutter_rust_bridge::for_generated::TaskInfo {
-            debug_name: "create_low_motion_config",
-            port: None,
-            mode: flutter_rust_bridge::for_generated::FfiCallMode::Sync,
-        },
-        move || {
-            let message = unsafe {
-                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
-                    ptr_,
-                    rust_vec_len_,
-                    data_len_,
-                )
-            };
-            let mut deserializer =
-                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
-            deserializer.end();
-            transform_result_sse::<_, ()>((move || {
-                let output_ok = Result::<_, ()>::Ok(crate::api::video::create_low_motion_config())?;
-                Ok(output_ok)
-            })())
-        },
-    )
-}
-fn wire__crate__api__video__crop_and_resize_batch_impl(
-    port_: flutter_rust_bridge::for_generated::MessagePort,
-    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
-    rust_vec_len_: i32,
-    data_len_: i32,
-) {
-    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::SseCodec, _, _>(
-        flutter_rust_bridge::for_generated::TaskInfo {
-            debug_name: "crop_and_resize_batch",
-            port: Some(port_),
-            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
-        },
-        move || {
-            let message = unsafe {
-                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
-                    ptr_,
-                    rust_vec_len_,
-                    data_len_,
-                )
-            };
-            let mut deserializer =
-                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
-            let api_frames = <Vec<crate::api::video::YuvFrameData>>::sse_decode(&mut deserializer);
-            let api_config = <crate::api::video::FrameCropConfig>::sse_decode(&mut deserializer);
-            deserializer.end();
-            move |context| {
-                transform_result_sse::<_, ()>((move || {
-                    let output_ok = Result::<_, ()>::Ok(crate::api::video::crop_and_resize_batch(
-                        api_frames, api_config,
-                    ))?;
-                    Ok(output_ok)
-                })())
-            }
-        },
-    )
-}
-fn wire__crate__api__video__crop_and_resize_frame_impl(
-    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
-    rust_vec_len_: i32,
-    data_len_: i32,
-) -> flutter_rust_bridge::for_generated::WireSyncRust2DartSse {
-    FLUTTER_RUST_BRIDGE_HANDLER.wrap_sync::<flutter_rust_bridge::for_generated::SseCodec, _>(
-        flutter_rust_bridge::for_generated::TaskInfo {
-            debug_name: "crop_and_resize_frame",
-            port: None,
-            mode: flutter_rust_bridge::for_generated::FfiCallMode::Sync,
-        },
-        move || {
-            let message = unsafe {
-                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
-                    ptr_,
-                    rust_vec_len_,
-                    data_len_,
-                )
-            };
-            let mut deserializer =
-                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
-            let api_y_plane = <Vec<u8>>::sse_decode(&mut deserializer);
-            let api_u_plane = <Vec<u8>>::sse_decode(&mut deserializer);
-            let api_v_plane = <Vec<u8>>::sse_decode(&mut deserializer);
-            let api_width = <u32>::sse_decode(&mut deserializer);
-            let api_height = <u32>::sse_decode(&mut deserializer);
-            let api_timestamp_ms = <u64>::sse_decode(&mut deserializer);
-            let api_frame_number = <u64>::sse_decode(&mut deserializer);
-            deserializer.end();
-            transform_result_sse::<_, ()>((move || {
-                let output_ok = Result::<_, ()>::Ok(crate::api::video::crop_and_resize_frame(
-                    api_y_plane,
-                    api_u_plane,
-                    api_v_plane,
-                    api_width,
-                    api_height,
-                    api_timestamp_ms,
-                    api_frame_number,
-                ))?;
-                Ok(output_ok)
-            })())
-        },
-    )
-}
-fn wire__crate__api__video__crop_and_resize_frame_with_config_impl(
-    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
-    rust_vec_len_: i32,
-    data_len_: i32,
-) -> flutter_rust_bridge::for_generated::WireSyncRust2DartSse {
-    FLUTTER_RUST_BRIDGE_HANDLER.wrap_sync::<flutter_rust_bridge::for_generated::SseCodec, _>(
-        flutter_rust_bridge::for_generated::TaskInfo {
-            debug_name: "crop_and_resize_frame_with_config",
-            port: None,
-            mode: flutter_rust_bridge::for_generated::FfiCallMode::Sync,
-        },
-        move || {
-            let message = unsafe {
-                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
-                    ptr_,
-                    rust_vec_len_,
-                    data_len_,
-                )
-            };
-            let mut deserializer =
-                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
-            let api_y_plane = <Vec<u8>>::sse_decode(&mut deserializer);
-            let api_u_plane = <Vec<u8>>::sse_decode(&mut deserializer);
-            let api_v_plane = <Vec<u8>>::sse_decode(&mut deserializer);
-            let api_width = <u32>::sse_decode(&mut deserializer);
-            let api_height = <u32>::sse_decode(&mut deserializer);
-            let api_timestamp_ms = <u64>::sse_decode(&mut deserializer);
-            let api_frame_number = <u64>::sse_decode(&mut deserializer);
-            let api_config = <crate::api::video::FrameCropConfig>::sse_decode(&mut deserializer);
-            deserializer.end();
-            transform_result_sse::<_, ()>((move || {
-                let output_ok =
-                    Result::<_, ()>::Ok(crate::api::video::crop_and_resize_frame_with_config(
-                        api_y_plane,
-                        api_u_plane,
-                        api_v_plane,
-                        api_width,
-                        api_height,
-                        api_timestamp_ms,
-                        api_frame_number,
-                        api_config,
-                    ))?;
-                Ok(output_ok)
-            })())
-        },
-    )
-}
-fn wire__crate__api__video__frame_crop_config_default_impl(
-    port_: flutter_rust_bridge::for_generated::MessagePort,
-    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
-    rust_vec_len_: i32,
-    data_len_: i32,
-) {
-    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::SseCodec, _, _>(
-        flutter_rust_bridge::for_generated::TaskInfo {
-            debug_name: "frame_crop_config_default",
-            port: Some(port_),
-            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
-        },
-        move || {
-            let message = unsafe {
-                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
-                    ptr_,
-                    rust_vec_len_,
-                    data_len_,
-                )
-            };
-            let mut deserializer =
-                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
-            deserializer.end();
-            move |context| {
-                transform_result_sse::<_, ()>((move || {
-                    let output_ok =
-                        Result::<_, ()>::Ok(crate::api::video::FrameCropConfig::default())?;
-                    Ok(output_ok)
-                })())
-            }
-        },
-    )
-}
-fn wire__crate__api__simple__greet_impl(
-    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
-    rust_vec_len_: i32,
-    data_len_: i32,
-) -> flutter_rust_bridge::for_generated::WireSyncRust2DartSse {
-    FLUTTER_RUST_BRIDGE_HANDLER.wrap_sync::<flutter_rust_bridge::for_generated::SseCodec, _>(
-        flutter_rust_bridge::for_generated::TaskInfo {
-            debug_name: "greet",
-            port: None,
-            mode: flutter_rust_bridge::for_generated::FfiCallMode::Sync,
-        },
-        move || {
-            let message = unsafe {
-                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
-                    ptr_,
-                    rust_vec_len_,
-                    data_len_,
-                )
-            };
-            let mut deserializer =
-                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
-            let api_name = <String>::sse_decode(&mut deserializer);
-            deserializer.end();
-            transform_result_sse::<_, ()>((move || {
-                let output_ok = Result::<_, ()>::Ok(crate::api::simple::greet(api_name))?;
-                Ok(output_ok)
-            })())
-        },
-    )
-}
-fn wire__crate__api__simple__init_app_impl(
-    port_: flutter_rust_bridge::for_generated::MessagePort,
-    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
-    rust_vec_len_: i32,
-    data_len_: i32,
-) {
-    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::SseCodec, _, _>(
-        flutter_rust_bridge::for_generated::TaskInfo {
-            debug_name: "init_app",
-            port: Some(port_),
-            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
-        },
-        move || {
-            let message = unsafe {
-                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
-                    ptr_,
-                    rust_vec_len_,
-                    data_len_,
-                )
-            };
-            let mut deserializer =
-                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
-            deserializer.end();
-            move |context| {
-                transform_result_sse::<_, ()>((move || {
-                    let output_ok = Result::<_, ()>::Ok({
-                        crate::api::simple::init_app();
-                    })?;
-                    Ok(output_ok)
-                })())
-            }
-        },
-    )
-}
-fn wire__crate__api__audio__init_sherpa_impl(
-    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
-    rust_vec_len_: i32,
-    data_len_: i32,
-) -> flutter_rust_bridge::for_generated::WireSyncRust2DartSse {
-    FLUTTER_RUST_BRIDGE_HANDLER.wrap_sync::<flutter_rust_bridge::for_generated::SseCodec, _>(
-        flutter_rust_bridge::for_generated::TaskInfo {
-            debug_name: "init_sherpa",
-            port: None,
-            mode: flutter_rust_bridge::for_generated::FfiCallMode::Sync,
-        },
-        move || {
-            let message = unsafe {
-                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
-                    ptr_,
-                    rust_vec_len_,
-                    data_len_,
-                )
-            };
-            let mut deserializer =
-                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
-            let api_model_path = <String>::sse_decode(&mut deserializer);
-            deserializer.end();
-            transform_result_sse::<_, AudioError>((move || {
-                let output_ok = crate::api::audio::init_sherpa(api_model_path)?;
-                Ok(output_ok)
-            })())
-        },
-    )
-}
-fn wire__crate__api__audio__init_vad_impl(
-    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
-    rust_vec_len_: i32,
-    data_len_: i32,
-) -> flutter_rust_bridge::for_generated::WireSyncRust2DartSse {
-    FLUTTER_RUST_BRIDGE_HANDLER.wrap_sync::<flutter_rust_bridge::for_generated::SseCodec, _>(
-        flutter_rust_bridge::for_generated::TaskInfo {
-            debug_name: "init_vad",
-            port: None,
-            mode: flutter_rust_bridge::for_generated::FfiCallMode::Sync,
-        },
-        move || {
-            let message = unsafe {
-                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
-                    ptr_,
-                    rust_vec_len_,
-                    data_len_,
-                )
-            };
-            let mut deserializer =
-                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
-            let api_vad_model_path = <String>::sse_decode(&mut deserializer);
-            deserializer.end();
-            transform_result_sse::<_, AudioError>((move || {
-                let output_ok = crate::api::audio::init_vad(api_vad_model_path)?;
                 Ok(output_ok)
             })())
         },
@@ -879,87 +534,6 @@ fn wire__crate__api__xhs__parse_xhs_from_url_impl(
         },
     )
 }
-fn wire__crate__api__audio__transcribe_audio_impl(
-    port_: flutter_rust_bridge::for_generated::MessagePort,
-    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
-    rust_vec_len_: i32,
-    data_len_: i32,
-) {
-    FLUTTER_RUST_BRIDGE_HANDLER.wrap_async::<flutter_rust_bridge::for_generated::SseCodec, _, _, _>(
-        flutter_rust_bridge::for_generated::TaskInfo {
-            debug_name: "transcribe_audio",
-            port: Some(port_),
-            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
-        },
-        move || {
-            let message = unsafe {
-                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
-                    ptr_,
-                    rust_vec_len_,
-                    data_len_,
-                )
-            };
-            let mut deserializer =
-                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
-            let api_path = <String>::sse_decode(&mut deserializer);
-            let api_language = <Option<String>>::sse_decode(&mut deserializer);
-            deserializer.end();
-            move |context| async move {
-                transform_result_sse::<_, AudioError>(
-                    (move || async move {
-                        let output_ok =
-                            crate::api::audio::transcribe_audio(api_path, api_language).await?;
-                        Ok(output_ok)
-                    })()
-                    .await,
-                )
-            }
-        },
-    )
-}
-fn wire__crate__api__audio__transcribe_pcm_impl(
-    port_: flutter_rust_bridge::for_generated::MessagePort,
-    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
-    rust_vec_len_: i32,
-    data_len_: i32,
-) {
-    FLUTTER_RUST_BRIDGE_HANDLER.wrap_async::<flutter_rust_bridge::for_generated::SseCodec, _, _, _>(
-        flutter_rust_bridge::for_generated::TaskInfo {
-            debug_name: "transcribe_pcm",
-            port: Some(port_),
-            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
-        },
-        move || {
-            let message = unsafe {
-                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
-                    ptr_,
-                    rust_vec_len_,
-                    data_len_,
-                )
-            };
-            let mut deserializer =
-                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
-            let api_pcm = <Vec<f32>>::sse_decode(&mut deserializer);
-            let api_sample_rate = <u32>::sse_decode(&mut deserializer);
-            let api_language = <Option<String>>::sse_decode(&mut deserializer);
-            deserializer.end();
-            move |context| async move {
-                transform_result_sse::<_, AudioError>(
-                    (move || async move {
-                        let output_ok = crate::api::audio::transcribe_pcm(
-                            api_pcm,
-                            api_sample_rate,
-                            api_language,
-                        )
-                        .await?;
-                        Ok(output_ok)
-                    })()
-                    .await,
-                )
-            }
-        },
-    )
-}
 
 // Section: related_funcs
 
@@ -967,7 +541,10 @@ flutter_rust_bridge::frb_generated_moi_arc_impl_value!(
     flutter_rust_bridge::for_generated::RustAutoOpaqueInner<AudioError>
 );
 flutter_rust_bridge::frb_generated_moi_arc_impl_value!(
-    flutter_rust_bridge::for_generated::RustAutoOpaqueInner<FrameExtractorManager>
+    flutter_rust_bridge::for_generated::RustAutoOpaqueInner<AudioRecognizer>
+);
+flutter_rust_bridge::frb_generated_moi_arc_impl_value!(
+    flutter_rust_bridge::for_generated::RustAutoOpaqueInner<VideoFrameExtractor>
 );
 
 // Section: dart2rust
@@ -982,11 +559,21 @@ impl SseDecode for AudioError {
     }
 }
 
-impl SseDecode for FrameExtractorManager {
+impl SseDecode for AudioRecognizer {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
         let mut inner = <RustOpaqueMoi<
-            flutter_rust_bridge::for_generated::RustAutoOpaqueInner<FrameExtractorManager>,
+            flutter_rust_bridge::for_generated::RustAutoOpaqueInner<AudioRecognizer>,
+        >>::sse_decode(deserializer);
+        return flutter_rust_bridge::for_generated::rust_auto_opaque_decode_owned(inner);
+    }
+}
+
+impl SseDecode for VideoFrameExtractor {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut inner = <RustOpaqueMoi<
+            flutter_rust_bridge::for_generated::RustAutoOpaqueInner<VideoFrameExtractor>,
         >>::sse_decode(deserializer);
         return flutter_rust_bridge::for_generated::rust_auto_opaque_decode_owned(inner);
     }
@@ -1003,9 +590,17 @@ impl SseDecode
 }
 
 impl SseDecode
-    for RustOpaqueMoi<
-        flutter_rust_bridge::for_generated::RustAutoOpaqueInner<FrameExtractorManager>,
-    >
+    for RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<AudioRecognizer>>
+{
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut inner = <usize>::sse_decode(deserializer);
+        return decode_rust_opaque_moi(inner);
+    }
+}
+
+impl SseDecode
+    for RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<VideoFrameExtractor>>
 {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
@@ -1022,45 +617,12 @@ impl SseDecode for String {
     }
 }
 
-impl SseDecode for crate::api::video::CroppedFrame {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
-        let mut var_rgbData = <Vec<u8>>::sse_decode(deserializer);
-        let mut var_width = <u32>::sse_decode(deserializer);
-        let mut var_height = <u32>::sse_decode(deserializer);
-        let mut var_timestampMs = <u64>::sse_decode(deserializer);
-        let mut var_frameNumber = <u64>::sse_decode(deserializer);
-        return crate::api::video::CroppedFrame {
-            rgb_data: var_rgbData,
-            width: var_width,
-            height: var_height,
-            timestamp_ms: var_timestampMs,
-            frame_number: var_frameNumber,
-        };
-    }
-}
-
-impl SseDecode for crate::core::video::pipeline::ExtractionConfig {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
-        let mut var_stateConfig =
-            <crate::core::video::state_machine::StateConfig>::sse_decode(deserializer);
-        let mut var_diffThreshold = <f32>::sse_decode(deserializer);
-        let mut var_dedupThreshold = <u32>::sse_decode(deserializer);
-        return crate::core::video::pipeline::ExtractionConfig {
-            state_config: var_stateConfig,
-            diff_threshold: var_diffThreshold,
-            dedup_threshold: var_dedupThreshold,
-        };
-    }
-}
-
-impl SseDecode for crate::api::video::ExtractionStats {
+impl SseDecode for crate::core::video::manager::ExtractionStats {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
         let mut var_processedFrames = <u64>::sse_decode(deserializer);
         let mut var_extractedFrames = <u64>::sse_decode(deserializer);
-        return crate::api::video::ExtractionStats {
+        return crate::core::video::manager::ExtractionStats {
             processed_frames: var_processedFrames,
             extracted_frames: var_extractedFrames,
         };
@@ -1074,21 +636,7 @@ impl SseDecode for f32 {
     }
 }
 
-impl SseDecode for crate::api::video::FrameCropConfig {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
-        let mut var_topCropRatio = <f32>::sse_decode(deserializer);
-        let mut var_bottomCropRatio = <f32>::sse_decode(deserializer);
-        let mut var_outputSize = <u32>::sse_decode(deserializer);
-        return crate::api::video::FrameCropConfig {
-            top_crop_ratio: var_topCropRatio,
-            bottom_crop_ratio: var_bottomCropRatio,
-            output_size: var_outputSize,
-        };
-    }
-}
-
-impl SseDecode for crate::api::video::FrameExtractedInfo {
+impl SseDecode for crate::core::video::manager::FrameExtractedInfo {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
         let mut var_timestampMs = <u64>::sse_decode(deserializer);
@@ -1097,7 +645,7 @@ impl SseDecode for crate::api::video::FrameExtractedInfo {
         let mut var_jpegData = <Vec<u8>>::sse_decode(deserializer);
         let mut var_width = <u32>::sse_decode(deserializer);
         let mut var_height = <u32>::sse_decode(deserializer);
-        return crate::api::video::FrameExtractedInfo {
+        return crate::core::video::manager::FrameExtractedInfo {
             timestamp_ms: var_timestampMs,
             frame_number: var_frameNumber,
             confidence: var_confidence,
@@ -1134,27 +682,13 @@ impl SseDecode for Vec<String> {
     }
 }
 
-impl SseDecode for Vec<crate::api::video::CroppedFrame> {
+impl SseDecode for Vec<crate::core::video::manager::FrameExtractedInfo> {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
         let mut len_ = <i32>::sse_decode(deserializer);
         let mut ans_ = vec![];
         for idx_ in 0..len_ {
-            ans_.push(<crate::api::video::CroppedFrame>::sse_decode(deserializer));
-        }
-        return ans_;
-    }
-}
-
-impl SseDecode for Vec<crate::api::video::FrameExtractedInfo> {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
-        let mut len_ = <i32>::sse_decode(deserializer);
-        let mut ans_ = vec![];
-        for idx_ in 0..len_ {
-            ans_.push(<crate::api::video::FrameExtractedInfo>::sse_decode(
-                deserializer,
-            ));
+            ans_.push(<crate::core::video::manager::FrameExtractedInfo>::sse_decode(deserializer));
         }
         return ans_;
     }
@@ -1172,18 +706,6 @@ impl SseDecode for Vec<f32> {
     }
 }
 
-impl SseDecode for Vec<u64> {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
-        let mut len_ = <i32>::sse_decode(deserializer);
-        let mut ans_ = vec![];
-        for idx_ in 0..len_ {
-            ans_.push(<u64>::sse_decode(deserializer));
-        }
-        return ans_;
-    }
-}
-
 impl SseDecode for Vec<u8> {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
@@ -1196,25 +718,15 @@ impl SseDecode for Vec<u8> {
     }
 }
 
-impl SseDecode for Vec<crate::api::video::YFrameData> {
+impl SseDecode for Vec<crate::core::video::manager::YFrameData> {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
         let mut len_ = <i32>::sse_decode(deserializer);
         let mut ans_ = vec![];
         for idx_ in 0..len_ {
-            ans_.push(<crate::api::video::YFrameData>::sse_decode(deserializer));
-        }
-        return ans_;
-    }
-}
-
-impl SseDecode for Vec<crate::api::video::YuvFrameData> {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
-        let mut len_ = <i32>::sse_decode(deserializer);
-        let mut ans_ = vec![];
-        for idx_ in 0..len_ {
-            ans_.push(<crate::api::video::YuvFrameData>::sse_decode(deserializer));
+            ans_.push(<crate::core::video::manager::YFrameData>::sse_decode(
+                deserializer,
+            ));
         }
         return ans_;
     }
@@ -1245,19 +757,6 @@ impl SseDecode for Option<String> {
     }
 }
 
-impl SseDecode for Option<crate::api::video::FrameExtractedInfo> {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
-        if (<bool>::sse_decode(deserializer)) {
-            return Some(<crate::api::video::FrameExtractedInfo>::sse_decode(
-                deserializer,
-            ));
-        } else {
-            return None;
-        }
-    }
-}
-
 impl SseDecode for Option<crate::api::models::xhs::XhsVideo> {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
@@ -1268,22 +767,6 @@ impl SseDecode for Option<crate::api::models::xhs::XhsVideo> {
         } else {
             return None;
         }
-    }
-}
-
-impl SseDecode for crate::core::video::state_machine::StateConfig {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
-        let mut var_initialSkip = <u32>::sse_decode(deserializer);
-        let mut var_maxSkip = <u32>::sse_decode(deserializer);
-        let mut var_minLockFrames = <u32>::sse_decode(deserializer);
-        let mut var_cooldownFrames = <u32>::sse_decode(deserializer);
-        return crate::core::video::state_machine::StateConfig {
-            initial_skip: var_initialSkip,
-            max_skip: var_maxSkip,
-            min_lock_frames: var_minLockFrames,
-            cooldown_frames: var_cooldownFrames,
-        };
     }
 }
 
@@ -1380,7 +863,7 @@ impl SseDecode for crate::api::models::xhs::XhsVideo {
     }
 }
 
-impl SseDecode for crate::api::video::YFrameData {
+impl SseDecode for crate::core::video::manager::YFrameData {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
         let mut var_width = <u32>::sse_decode(deserializer);
@@ -1388,32 +871,10 @@ impl SseDecode for crate::api::video::YFrameData {
         let mut var_yPlane = <Vec<u8>>::sse_decode(deserializer);
         let mut var_timestampMs = <u64>::sse_decode(deserializer);
         let mut var_frameNumber = <u64>::sse_decode(deserializer);
-        return crate::api::video::YFrameData {
+        return crate::core::video::manager::YFrameData {
             width: var_width,
             height: var_height,
             y_plane: var_yPlane,
-            timestamp_ms: var_timestampMs,
-            frame_number: var_frameNumber,
-        };
-    }
-}
-
-impl SseDecode for crate::api::video::YuvFrameData {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
-        let mut var_width = <u32>::sse_decode(deserializer);
-        let mut var_height = <u32>::sse_decode(deserializer);
-        let mut var_yPlane = <Vec<u8>>::sse_decode(deserializer);
-        let mut var_uPlane = <Vec<u8>>::sse_decode(deserializer);
-        let mut var_vPlane = <Vec<u8>>::sse_decode(deserializer);
-        let mut var_timestampMs = <u64>::sse_decode(deserializer);
-        let mut var_frameNumber = <u64>::sse_decode(deserializer);
-        return crate::api::video::YuvFrameData {
-            width: var_width,
-            height: var_height,
-            y_plane: var_yPlane,
-            u_plane: var_uPlane,
-            v_plane: var_vPlane,
             timestamp_ms: var_timestampMs,
             frame_number: var_frameNumber,
         };
@@ -1436,27 +897,30 @@ fn pde_ffi_dispatcher_primary_impl(
 ) {
     // Codec=Pde (Serialization + dispatch), see doc to use other codecs
     match func_id {
-        3 => wire__crate__api__video__FrameExtractorManager_process_batch_impl(
-            port,
-            ptr,
-            rust_vec_len,
-            data_len,
-        ),
-        11 => {
-            wire__crate__api__video__crop_and_resize_batch_impl(port, ptr, rust_vec_len, data_len)
+        1 => {
+            wire__crate__api__audio__AudioRecognizer_create_impl(port, ptr, rust_vec_len, data_len)
         }
-        14 => wire__crate__api__video__frame_crop_config_default_impl(
+        3 => wire__crate__api__audio__AudioRecognizer_transcribe_audio_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        16 => wire__crate__api__simple__init_app_impl(port, ptr, rust_vec_len, data_len),
-        19 => {
+        4 => wire__crate__api__audio__AudioRecognizer_transcribe_pcm_impl(
+            port,
+            ptr,
+            rust_vec_len,
+            data_len,
+        ),
+        6 => wire__crate__api__video__VideoFrameExtractor_process_batch_impl(
+            port,
+            ptr,
+            rust_vec_len,
+            data_len,
+        ),
+        9 => {
             wire__crate__api__models__xhs__note_type_default_impl(port, ptr, rust_vec_len, data_len)
         }
-        22 => wire__crate__api__audio__transcribe_audio_impl(port, ptr, rust_vec_len, data_len),
-        23 => wire__crate__api__audio__transcribe_pcm_impl(port, ptr, rust_vec_len, data_len),
         _ => unreachable!(),
     }
 }
@@ -1469,46 +933,12 @@ fn pde_ffi_dispatcher_sync_impl(
 ) -> flutter_rust_bridge::for_generated::WireSyncRust2DartSse {
     // Codec=Pde (Serialization + dispatch), see doc to use other codecs
     match func_id {
-        1 => wire__crate__api__video__FrameExtractorManager_get_stats_impl(
-            ptr,
-            rust_vec_len,
-            data_len,
-        ),
-        2 => wire__crate__api__video__FrameExtractorManager_new_impl(ptr, rust_vec_len, data_len),
-        4 => wire__crate__api__video__FrameExtractorManager_process_frame_impl(
-            ptr,
-            rust_vec_len,
-            data_len,
-        ),
-        5 => wire__crate__api__video__FrameExtractorManager_process_y_frame_impl(
-            ptr,
-            rust_vec_len,
-            data_len,
-        ),
-        6 => wire__crate__api__video__FrameExtractorManager_process_yuv_frame_impl(
-            ptr,
-            rust_vec_len,
-            data_len,
-        ),
-        7 => wire__crate__api__video__FrameExtractorManager_reset_impl(ptr, rust_vec_len, data_len),
-        8 => wire__crate__api__video__FrameExtractorManager_with_mock_detector_impl(
-            ptr,
-            rust_vec_len,
-            data_len,
-        ),
-        9 => wire__crate__api__video__create_high_motion_config_impl(ptr, rust_vec_len, data_len),
-        10 => wire__crate__api__video__create_low_motion_config_impl(ptr, rust_vec_len, data_len),
-        12 => wire__crate__api__video__crop_and_resize_frame_impl(ptr, rust_vec_len, data_len),
-        13 => wire__crate__api__video__crop_and_resize_frame_with_config_impl(
-            ptr,
-            rust_vec_len,
-            data_len,
-        ),
-        15 => wire__crate__api__simple__greet_impl(ptr, rust_vec_len, data_len),
-        17 => wire__crate__api__audio__init_sherpa_impl(ptr, rust_vec_len, data_len),
-        18 => wire__crate__api__audio__init_vad_impl(ptr, rust_vec_len, data_len),
-        20 => wire__crate__api__xhs__parse_xhs_from_text_impl(ptr, rust_vec_len, data_len),
-        21 => wire__crate__api__xhs__parse_xhs_from_url_impl(ptr, rust_vec_len, data_len),
+        2 => wire__crate__api__audio__AudioRecognizer_models_dir_impl(ptr, rust_vec_len, data_len),
+        5 => wire__crate__api__video__VideoFrameExtractor_create_impl(ptr, rust_vec_len, data_len),
+        7 => wire__crate__api__video__VideoFrameExtractor_reset_impl(ptr, rust_vec_len, data_len),
+        8 => wire__crate__api__video__VideoFrameExtractor_stats_impl(ptr, rust_vec_len, data_len),
+        10 => wire__crate__api__xhs__parse_xhs_from_text_impl(ptr, rust_vec_len, data_len),
+        11 => wire__crate__api__xhs__parse_xhs_from_url_impl(ptr, rust_vec_len, data_len),
         _ => unreachable!(),
     }
 }
@@ -1531,73 +961,40 @@ impl flutter_rust_bridge::IntoIntoDart<FrbWrapper<AudioError>> for AudioError {
 }
 
 // Codec=Dco (DartCObject based), see doc to use other codecs
-impl flutter_rust_bridge::IntoDart for FrbWrapper<FrameExtractorManager> {
+impl flutter_rust_bridge::IntoDart for FrbWrapper<AudioRecognizer> {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        flutter_rust_bridge::for_generated::rust_auto_opaque_encode::<_, MoiArc<_>>(self.0)
+            .into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive for FrbWrapper<AudioRecognizer> {}
+
+impl flutter_rust_bridge::IntoIntoDart<FrbWrapper<AudioRecognizer>> for AudioRecognizer {
+    fn into_into_dart(self) -> FrbWrapper<AudioRecognizer> {
+        self.into()
+    }
+}
+
+// Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for FrbWrapper<VideoFrameExtractor> {
     fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
         flutter_rust_bridge::for_generated::rust_auto_opaque_encode::<_, MoiArc<_>>(self.0)
             .into_dart()
     }
 }
 impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
-    for FrbWrapper<FrameExtractorManager>
+    for FrbWrapper<VideoFrameExtractor>
 {
 }
 
-impl flutter_rust_bridge::IntoIntoDart<FrbWrapper<FrameExtractorManager>>
-    for FrameExtractorManager
-{
-    fn into_into_dart(self) -> FrbWrapper<FrameExtractorManager> {
+impl flutter_rust_bridge::IntoIntoDart<FrbWrapper<VideoFrameExtractor>> for VideoFrameExtractor {
+    fn into_into_dart(self) -> FrbWrapper<VideoFrameExtractor> {
         self.into()
     }
 }
 
 // Codec=Dco (DartCObject based), see doc to use other codecs
-impl flutter_rust_bridge::IntoDart for crate::api::video::CroppedFrame {
-    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
-        [
-            self.rgb_data.into_into_dart().into_dart(),
-            self.width.into_into_dart().into_dart(),
-            self.height.into_into_dart().into_dart(),
-            self.timestamp_ms.into_into_dart().into_dart(),
-            self.frame_number.into_into_dart().into_dart(),
-        ]
-        .into_dart()
-    }
-}
-impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
-    for crate::api::video::CroppedFrame
-{
-}
-impl flutter_rust_bridge::IntoIntoDart<crate::api::video::CroppedFrame>
-    for crate::api::video::CroppedFrame
-{
-    fn into_into_dart(self) -> crate::api::video::CroppedFrame {
-        self
-    }
-}
-// Codec=Dco (DartCObject based), see doc to use other codecs
-impl flutter_rust_bridge::IntoDart for crate::core::video::pipeline::ExtractionConfig {
-    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
-        [
-            self.state_config.into_into_dart().into_dart(),
-            self.diff_threshold.into_into_dart().into_dart(),
-            self.dedup_threshold.into_into_dart().into_dart(),
-        ]
-        .into_dart()
-    }
-}
-impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
-    for crate::core::video::pipeline::ExtractionConfig
-{
-}
-impl flutter_rust_bridge::IntoIntoDart<crate::core::video::pipeline::ExtractionConfig>
-    for crate::core::video::pipeline::ExtractionConfig
-{
-    fn into_into_dart(self) -> crate::core::video::pipeline::ExtractionConfig {
-        self
-    }
-}
-// Codec=Dco (DartCObject based), see doc to use other codecs
-impl flutter_rust_bridge::IntoDart for crate::api::video::ExtractionStats {
+impl flutter_rust_bridge::IntoDart for crate::core::video::manager::ExtractionStats {
     fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
         [
             self.processed_frames.into_into_dart().into_dart(),
@@ -1607,40 +1004,18 @@ impl flutter_rust_bridge::IntoDart for crate::api::video::ExtractionStats {
     }
 }
 impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
-    for crate::api::video::ExtractionStats
+    for crate::core::video::manager::ExtractionStats
 {
 }
-impl flutter_rust_bridge::IntoIntoDart<crate::api::video::ExtractionStats>
-    for crate::api::video::ExtractionStats
+impl flutter_rust_bridge::IntoIntoDart<crate::core::video::manager::ExtractionStats>
+    for crate::core::video::manager::ExtractionStats
 {
-    fn into_into_dart(self) -> crate::api::video::ExtractionStats {
+    fn into_into_dart(self) -> crate::core::video::manager::ExtractionStats {
         self
     }
 }
 // Codec=Dco (DartCObject based), see doc to use other codecs
-impl flutter_rust_bridge::IntoDart for crate::api::video::FrameCropConfig {
-    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
-        [
-            self.top_crop_ratio.into_into_dart().into_dart(),
-            self.bottom_crop_ratio.into_into_dart().into_dart(),
-            self.output_size.into_into_dart().into_dart(),
-        ]
-        .into_dart()
-    }
-}
-impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
-    for crate::api::video::FrameCropConfig
-{
-}
-impl flutter_rust_bridge::IntoIntoDart<crate::api::video::FrameCropConfig>
-    for crate::api::video::FrameCropConfig
-{
-    fn into_into_dart(self) -> crate::api::video::FrameCropConfig {
-        self
-    }
-}
-// Codec=Dco (DartCObject based), see doc to use other codecs
-impl flutter_rust_bridge::IntoDart for crate::api::video::FrameExtractedInfo {
+impl flutter_rust_bridge::IntoDart for crate::core::video::manager::FrameExtractedInfo {
     fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
         [
             self.timestamp_ms.into_into_dart().into_dart(),
@@ -1654,13 +1029,13 @@ impl flutter_rust_bridge::IntoDart for crate::api::video::FrameExtractedInfo {
     }
 }
 impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
-    for crate::api::video::FrameExtractedInfo
+    for crate::core::video::manager::FrameExtractedInfo
 {
 }
-impl flutter_rust_bridge::IntoIntoDart<crate::api::video::FrameExtractedInfo>
-    for crate::api::video::FrameExtractedInfo
+impl flutter_rust_bridge::IntoIntoDart<crate::core::video::manager::FrameExtractedInfo>
+    for crate::core::video::manager::FrameExtractedInfo
 {
-    fn into_into_dart(self) -> crate::api::video::FrameExtractedInfo {
+    fn into_into_dart(self) -> crate::core::video::manager::FrameExtractedInfo {
         self
     }
 }
@@ -1684,29 +1059,6 @@ impl flutter_rust_bridge::IntoIntoDart<crate::api::models::xhs::NoteType>
     for crate::api::models::xhs::NoteType
 {
     fn into_into_dart(self) -> crate::api::models::xhs::NoteType {
-        self
-    }
-}
-// Codec=Dco (DartCObject based), see doc to use other codecs
-impl flutter_rust_bridge::IntoDart for crate::core::video::state_machine::StateConfig {
-    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
-        [
-            self.initial_skip.into_into_dart().into_dart(),
-            self.max_skip.into_into_dart().into_dart(),
-            self.min_lock_frames.into_into_dart().into_dart(),
-            self.cooldown_frames.into_into_dart().into_dart(),
-        ]
-        .into_dart()
-    }
-}
-impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
-    for crate::core::video::state_machine::StateConfig
-{
-}
-impl flutter_rust_bridge::IntoIntoDart<crate::core::video::state_machine::StateConfig>
-    for crate::core::video::state_machine::StateConfig
-{
-    fn into_into_dart(self) -> crate::core::video::state_machine::StateConfig {
         self
     }
 }
@@ -1798,35 +1150,12 @@ impl flutter_rust_bridge::IntoIntoDart<crate::api::models::xhs::XhsVideo>
     }
 }
 // Codec=Dco (DartCObject based), see doc to use other codecs
-impl flutter_rust_bridge::IntoDart for crate::api::video::YFrameData {
+impl flutter_rust_bridge::IntoDart for crate::core::video::manager::YFrameData {
     fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
         [
             self.width.into_into_dart().into_dart(),
             self.height.into_into_dart().into_dart(),
             self.y_plane.into_into_dart().into_dart(),
-            self.timestamp_ms.into_into_dart().into_dart(),
-            self.frame_number.into_into_dart().into_dart(),
-        ]
-        .into_dart()
-    }
-}
-impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive for crate::api::video::YFrameData {}
-impl flutter_rust_bridge::IntoIntoDart<crate::api::video::YFrameData>
-    for crate::api::video::YFrameData
-{
-    fn into_into_dart(self) -> crate::api::video::YFrameData {
-        self
-    }
-}
-// Codec=Dco (DartCObject based), see doc to use other codecs
-impl flutter_rust_bridge::IntoDart for crate::api::video::YuvFrameData {
-    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
-        [
-            self.width.into_into_dart().into_dart(),
-            self.height.into_into_dart().into_dart(),
-            self.y_plane.into_into_dart().into_dart(),
-            self.u_plane.into_into_dart().into_dart(),
-            self.v_plane.into_into_dart().into_dart(),
             self.timestamp_ms.into_into_dart().into_dart(),
             self.frame_number.into_into_dart().into_dart(),
         ]
@@ -1834,13 +1163,13 @@ impl flutter_rust_bridge::IntoDart for crate::api::video::YuvFrameData {
     }
 }
 impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
-    for crate::api::video::YuvFrameData
+    for crate::core::video::manager::YFrameData
 {
 }
-impl flutter_rust_bridge::IntoIntoDart<crate::api::video::YuvFrameData>
-    for crate::api::video::YuvFrameData
+impl flutter_rust_bridge::IntoIntoDart<crate::core::video::manager::YFrameData>
+    for crate::core::video::manager::YFrameData
 {
-    fn into_into_dart(self) -> crate::api::video::YuvFrameData {
+    fn into_into_dart(self) -> crate::core::video::manager::YFrameData {
         self
     }
 }
@@ -1852,15 +1181,17 @@ impl SseEncode for AudioError {
     }
 }
 
-impl SseEncode for FrameExtractorManager {
+impl SseEncode for AudioRecognizer {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
-        <RustOpaqueMoi<
-            flutter_rust_bridge::for_generated::RustAutoOpaqueInner<FrameExtractorManager>,
-        >>::sse_encode(
-            flutter_rust_bridge::for_generated::rust_auto_opaque_encode::<_, MoiArc<_>>(self),
-            serializer,
-        );
+        <RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<AudioRecognizer>>>::sse_encode(flutter_rust_bridge::for_generated::rust_auto_opaque_encode::<_, MoiArc<_>>(self), serializer);
+    }
+}
+
+impl SseEncode for VideoFrameExtractor {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<VideoFrameExtractor>>>::sse_encode(flutter_rust_bridge::for_generated::rust_auto_opaque_encode::<_, MoiArc<_>>(self), serializer);
     }
 }
 
@@ -1876,9 +1207,18 @@ impl SseEncode
 }
 
 impl SseEncode
-    for RustOpaqueMoi<
-        flutter_rust_bridge::for_generated::RustAutoOpaqueInner<FrameExtractorManager>,
-    >
+    for RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<AudioRecognizer>>
+{
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        let (ptr, size) = self.sse_encode_raw();
+        <usize>::sse_encode(ptr, serializer);
+        <i32>::sse_encode(size, serializer);
+    }
+}
+
+impl SseEncode
+    for RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<VideoFrameExtractor>>
 {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
@@ -1895,27 +1235,7 @@ impl SseEncode for String {
     }
 }
 
-impl SseEncode for crate::api::video::CroppedFrame {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
-        <Vec<u8>>::sse_encode(self.rgb_data, serializer);
-        <u32>::sse_encode(self.width, serializer);
-        <u32>::sse_encode(self.height, serializer);
-        <u64>::sse_encode(self.timestamp_ms, serializer);
-        <u64>::sse_encode(self.frame_number, serializer);
-    }
-}
-
-impl SseEncode for crate::core::video::pipeline::ExtractionConfig {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
-        <crate::core::video::state_machine::StateConfig>::sse_encode(self.state_config, serializer);
-        <f32>::sse_encode(self.diff_threshold, serializer);
-        <u32>::sse_encode(self.dedup_threshold, serializer);
-    }
-}
-
-impl SseEncode for crate::api::video::ExtractionStats {
+impl SseEncode for crate::core::video::manager::ExtractionStats {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
         <u64>::sse_encode(self.processed_frames, serializer);
@@ -1930,16 +1250,7 @@ impl SseEncode for f32 {
     }
 }
 
-impl SseEncode for crate::api::video::FrameCropConfig {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
-        <f32>::sse_encode(self.top_crop_ratio, serializer);
-        <f32>::sse_encode(self.bottom_crop_ratio, serializer);
-        <u32>::sse_encode(self.output_size, serializer);
-    }
-}
-
-impl SseEncode for crate::api::video::FrameExtractedInfo {
+impl SseEncode for crate::core::video::manager::FrameExtractedInfo {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
         <u64>::sse_encode(self.timestamp_ms, serializer);
@@ -1975,22 +1286,12 @@ impl SseEncode for Vec<String> {
     }
 }
 
-impl SseEncode for Vec<crate::api::video::CroppedFrame> {
+impl SseEncode for Vec<crate::core::video::manager::FrameExtractedInfo> {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
         <i32>::sse_encode(self.len() as _, serializer);
         for item in self {
-            <crate::api::video::CroppedFrame>::sse_encode(item, serializer);
-        }
-    }
-}
-
-impl SseEncode for Vec<crate::api::video::FrameExtractedInfo> {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
-        <i32>::sse_encode(self.len() as _, serializer);
-        for item in self {
-            <crate::api::video::FrameExtractedInfo>::sse_encode(item, serializer);
+            <crate::core::video::manager::FrameExtractedInfo>::sse_encode(item, serializer);
         }
     }
 }
@@ -2005,16 +1306,6 @@ impl SseEncode for Vec<f32> {
     }
 }
 
-impl SseEncode for Vec<u64> {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
-        <i32>::sse_encode(self.len() as _, serializer);
-        for item in self {
-            <u64>::sse_encode(item, serializer);
-        }
-    }
-}
-
 impl SseEncode for Vec<u8> {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
@@ -2025,22 +1316,12 @@ impl SseEncode for Vec<u8> {
     }
 }
 
-impl SseEncode for Vec<crate::api::video::YFrameData> {
+impl SseEncode for Vec<crate::core::video::manager::YFrameData> {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
         <i32>::sse_encode(self.len() as _, serializer);
         for item in self {
-            <crate::api::video::YFrameData>::sse_encode(item, serializer);
-        }
-    }
-}
-
-impl SseEncode for Vec<crate::api::video::YuvFrameData> {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
-        <i32>::sse_encode(self.len() as _, serializer);
-        for item in self {
-            <crate::api::video::YuvFrameData>::sse_encode(item, serializer);
+            <crate::core::video::manager::YFrameData>::sse_encode(item, serializer);
         }
     }
 }
@@ -2073,16 +1354,6 @@ impl SseEncode for Option<String> {
     }
 }
 
-impl SseEncode for Option<crate::api::video::FrameExtractedInfo> {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
-        <bool>::sse_encode(self.is_some(), serializer);
-        if let Some(value) = self {
-            <crate::api::video::FrameExtractedInfo>::sse_encode(value, serializer);
-        }
-    }
-}
-
 impl SseEncode for Option<crate::api::models::xhs::XhsVideo> {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
@@ -2090,16 +1361,6 @@ impl SseEncode for Option<crate::api::models::xhs::XhsVideo> {
         if let Some(value) = self {
             <crate::api::models::xhs::XhsVideo>::sse_encode(value, serializer);
         }
-    }
-}
-
-impl SseEncode for crate::core::video::state_machine::StateConfig {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
-        <u32>::sse_encode(self.initial_skip, serializer);
-        <u32>::sse_encode(self.max_skip, serializer);
-        <u32>::sse_encode(self.min_lock_frames, serializer);
-        <u32>::sse_encode(self.cooldown_frames, serializer);
     }
 }
 
@@ -2177,25 +1438,12 @@ impl SseEncode for crate::api::models::xhs::XhsVideo {
     }
 }
 
-impl SseEncode for crate::api::video::YFrameData {
+impl SseEncode for crate::core::video::manager::YFrameData {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
         <u32>::sse_encode(self.width, serializer);
         <u32>::sse_encode(self.height, serializer);
         <Vec<u8>>::sse_encode(self.y_plane, serializer);
-        <u64>::sse_encode(self.timestamp_ms, serializer);
-        <u64>::sse_encode(self.frame_number, serializer);
-    }
-}
-
-impl SseEncode for crate::api::video::YuvFrameData {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
-        <u32>::sse_encode(self.width, serializer);
-        <u32>::sse_encode(self.height, serializer);
-        <Vec<u8>>::sse_encode(self.y_plane, serializer);
-        <Vec<u8>>::sse_encode(self.u_plane, serializer);
-        <Vec<u8>>::sse_encode(self.v_plane, serializer);
         <u64>::sse_encode(self.timestamp_ms, serializer);
         <u64>::sse_encode(self.frame_number, serializer);
     }
@@ -2216,6 +1464,7 @@ mod io {
     // Section: imports
 
     use super::*;
+    use crate::api::audio::*;
     use crate::api::video::*;
     use crate::core::audio::error::*;
     use flutter_rust_bridge::for_generated::byteorder::{
@@ -2243,17 +1492,31 @@ mod io {
     }
 
     #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_cook_lib_rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFrameExtractorManager(
+    pub extern "C" fn frbgen_cook_lib_rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerAudioRecognizer(
         ptr: *const std::ffi::c_void,
     ) {
-        MoiArc::<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<FrameExtractorManager>>::increment_strong_count(ptr as _);
+        MoiArc::<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<AudioRecognizer>>::increment_strong_count(ptr as _);
     }
 
     #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_cook_lib_rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFrameExtractorManager(
+    pub extern "C" fn frbgen_cook_lib_rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerAudioRecognizer(
         ptr: *const std::ffi::c_void,
     ) {
-        MoiArc::<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<FrameExtractorManager>>::decrement_strong_count(ptr as _);
+        MoiArc::<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<AudioRecognizer>>::decrement_strong_count(ptr as _);
+    }
+
+    #[unsafe(no_mangle)]
+    pub extern "C" fn frbgen_cook_lib_rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerVideoFrameExtractor(
+        ptr: *const std::ffi::c_void,
+    ) {
+        MoiArc::<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<VideoFrameExtractor>>::increment_strong_count(ptr as _);
+    }
+
+    #[unsafe(no_mangle)]
+    pub extern "C" fn frbgen_cook_lib_rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerVideoFrameExtractor(
+        ptr: *const std::ffi::c_void,
+    ) {
+        MoiArc::<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<VideoFrameExtractor>>::decrement_strong_count(ptr as _);
     }
 }
 #[cfg(not(target_family = "wasm"))]
@@ -2268,6 +1531,7 @@ mod web {
     // Section: imports
 
     use super::*;
+    use crate::api::audio::*;
     use crate::api::video::*;
     use crate::core::audio::error::*;
     use flutter_rust_bridge::for_generated::byteorder::{
@@ -2297,17 +1561,31 @@ mod web {
     }
 
     #[wasm_bindgen]
-    pub fn rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFrameExtractorManager(
+    pub fn rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerAudioRecognizer(
         ptr: *const std::ffi::c_void,
     ) {
-        MoiArc::<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<FrameExtractorManager>>::increment_strong_count(ptr as _);
+        MoiArc::<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<AudioRecognizer>>::increment_strong_count(ptr as _);
     }
 
     #[wasm_bindgen]
-    pub fn rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFrameExtractorManager(
+    pub fn rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerAudioRecognizer(
         ptr: *const std::ffi::c_void,
     ) {
-        MoiArc::<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<FrameExtractorManager>>::decrement_strong_count(ptr as _);
+        MoiArc::<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<AudioRecognizer>>::decrement_strong_count(ptr as _);
+    }
+
+    #[wasm_bindgen]
+    pub fn rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerVideoFrameExtractor(
+        ptr: *const std::ffi::c_void,
+    ) {
+        MoiArc::<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<VideoFrameExtractor>>::increment_strong_count(ptr as _);
+    }
+
+    #[wasm_bindgen]
+    pub fn rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerVideoFrameExtractor(
+        ptr: *const std::ffi::c_void,
+    ) {
+        MoiArc::<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<VideoFrameExtractor>>::decrement_strong_count(ptr as _);
     }
 }
 #[cfg(target_family = "wasm")]

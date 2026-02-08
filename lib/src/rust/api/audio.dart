@@ -8,25 +8,30 @@ import '../frb_generated.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
 // These functions are ignored because they are not marked as `pub`: `format_timestamp`
+// These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `drop`
 
-void initSherpa({required String modelPath}) =>
-    RustLib.instance.api.crateApiAudioInitSherpa(modelPath: modelPath);
+// Rust type: RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<AudioRecognizer>>
+abstract class AudioRecognizer implements RustOpaqueInterface {
+  /// 创建音频识别器并加载模型
+  ///
+  /// models_dir 下需要包含：
+  /// - sherpa-ncnn/ (ASR 模型)
+  /// - silero-vad/ (VAD 模型)
+  static Future<AudioRecognizer> create({required String modelsDir}) => RustLib
+      .instance
+      .api
+      .crateApiAudioAudioRecognizerCreate(modelsDir: modelsDir);
 
-void initVad({required String vadModelPath}) =>
-    RustLib.instance.api.crateApiAudioInitVad(vadModelPath: vadModelPath);
+  /// 获取模型目录
+  String get modelsDir;
 
-Future<String> transcribeAudio({required String path, String? language}) =>
-    RustLib.instance.api.crateApiAudioTranscribeAudio(
-      path: path,
-      language: language,
-    );
+  /// 转录音频文件（WAV 格式）
+  Future<String> transcribeAudio({required String path, String? language});
 
-Future<String> transcribePcm({
-  required List<double> pcm,
-  required int sampleRate,
-  String? language,
-}) => RustLib.instance.api.crateApiAudioTranscribePcm(
-  pcm: pcm,
-  sampleRate: sampleRate,
-  language: language,
-);
+  /// 转录 PCM 数据
+  Future<String> transcribePcm({
+    required List<double> pcm,
+    required int sampleRate,
+    String? language,
+  });
+}

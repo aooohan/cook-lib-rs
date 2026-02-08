@@ -5,12 +5,10 @@
 
 import 'api/audio.dart';
 import 'api/models/xhs.dart';
-import 'api/simple.dart';
 import 'api/video.dart';
 import 'api/xhs.dart';
 import 'core/audio/error.dart';
-import 'core/video/pipeline.dart';
-import 'core/video/state_machine.dart';
+import 'core/video/manager.dart';
 import 'dart:async';
 import 'dart:convert';
 import 'dart:ffi' as ffi;
@@ -30,8 +28,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
       ._rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerAudioErrorPtr;
 
   CrossPlatformFinalizerArg
-  get rust_arc_decrement_strong_count_FrameExtractorManagerPtr => wire
-      ._rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFrameExtractorManagerPtr;
+  get rust_arc_decrement_strong_count_AudioRecognizerPtr => wire
+      ._rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerAudioRecognizerPtr;
+
+  CrossPlatformFinalizerArg
+  get rust_arc_decrement_strong_count_VideoFrameExtractorPtr => wire
+      ._rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerVideoFrameExtractorPtr;
 
   @protected
   AudioError
@@ -40,14 +42,26 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
-  FrameExtractorManager
-  dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFrameExtractorManager(
+  AudioRecognizer
+  dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerAudioRecognizer(
     dynamic raw,
   );
 
   @protected
-  FrameExtractorManager
-  dco_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFrameExtractorManager(
+  VideoFrameExtractor
+  dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerVideoFrameExtractor(
+    dynamic raw,
+  );
+
+  @protected
+  AudioRecognizer
+  dco_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerAudioRecognizer(
+    dynamic raw,
+  );
+
+  @protected
+  VideoFrameExtractor
+  dco_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerVideoFrameExtractor(
     dynamic raw,
   );
 
@@ -58,8 +72,14 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
-  FrameExtractorManager
-  dco_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFrameExtractorManager(
+  AudioRecognizer
+  dco_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerAudioRecognizer(
+    dynamic raw,
+  );
+
+  @protected
+  VideoFrameExtractor
+  dco_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerVideoFrameExtractor(
     dynamic raw,
   );
 
@@ -67,28 +87,13 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   String dco_decode_String(dynamic raw);
 
   @protected
-  FrameCropConfig dco_decode_box_autoadd_frame_crop_config(dynamic raw);
-
-  @protected
-  FrameExtractedInfo dco_decode_box_autoadd_frame_extracted_info(dynamic raw);
-
-  @protected
   XhsVideo dco_decode_box_autoadd_xhs_video(dynamic raw);
-
-  @protected
-  CroppedFrame dco_decode_cropped_frame(dynamic raw);
-
-  @protected
-  ExtractionConfig dco_decode_extraction_config(dynamic raw);
 
   @protected
   ExtractionStats dco_decode_extraction_stats(dynamic raw);
 
   @protected
   double dco_decode_f_32(dynamic raw);
-
-  @protected
-  FrameCropConfig dco_decode_frame_crop_config(dynamic raw);
 
   @protected
   FrameExtractedInfo dco_decode_frame_extracted_info(dynamic raw);
@@ -103,9 +108,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   List<String> dco_decode_list_String(dynamic raw);
 
   @protected
-  List<CroppedFrame> dco_decode_list_cropped_frame(dynamic raw);
-
-  @protected
   List<FrameExtractedInfo> dco_decode_list_frame_extracted_info(dynamic raw);
 
   @protected
@@ -115,19 +117,10 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   Float32List dco_decode_list_prim_f_32_strict(dynamic raw);
 
   @protected
-  Uint64List dco_decode_list_prim_u_64_strict(dynamic raw);
-
-  @protected
-  List<int> dco_decode_list_prim_u_8_loose(dynamic raw);
-
-  @protected
   Uint8List dco_decode_list_prim_u_8_strict(dynamic raw);
 
   @protected
   List<YFrameData> dco_decode_list_y_frame_data(dynamic raw);
-
-  @protected
-  List<YuvFrameData> dco_decode_list_yuv_frame_data(dynamic raw);
 
   @protected
   NoteType dco_decode_note_type(dynamic raw);
@@ -136,15 +129,7 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   String? dco_decode_opt_String(dynamic raw);
 
   @protected
-  FrameExtractedInfo? dco_decode_opt_box_autoadd_frame_extracted_info(
-    dynamic raw,
-  );
-
-  @protected
   XhsVideo? dco_decode_opt_box_autoadd_xhs_video(dynamic raw);
-
-  @protected
-  StateConfig dco_decode_state_config(dynamic raw);
 
   @protected
   int dco_decode_u_32(dynamic raw);
@@ -177,23 +162,32 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   YFrameData dco_decode_y_frame_data(dynamic raw);
 
   @protected
-  YuvFrameData dco_decode_yuv_frame_data(dynamic raw);
-
-  @protected
   AudioError
   sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerAudioError(
     SseDeserializer deserializer,
   );
 
   @protected
-  FrameExtractorManager
-  sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFrameExtractorManager(
+  AudioRecognizer
+  sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerAudioRecognizer(
     SseDeserializer deserializer,
   );
 
   @protected
-  FrameExtractorManager
-  sse_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFrameExtractorManager(
+  VideoFrameExtractor
+  sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerVideoFrameExtractor(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  AudioRecognizer
+  sse_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerAudioRecognizer(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  VideoFrameExtractor
+  sse_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerVideoFrameExtractor(
     SseDeserializer deserializer,
   );
 
@@ -204,8 +198,14 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
-  FrameExtractorManager
-  sse_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFrameExtractorManager(
+  AudioRecognizer
+  sse_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerAudioRecognizer(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  VideoFrameExtractor
+  sse_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerVideoFrameExtractor(
     SseDeserializer deserializer,
   );
 
@@ -213,32 +213,13 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   String sse_decode_String(SseDeserializer deserializer);
 
   @protected
-  FrameCropConfig sse_decode_box_autoadd_frame_crop_config(
-    SseDeserializer deserializer,
-  );
-
-  @protected
-  FrameExtractedInfo sse_decode_box_autoadd_frame_extracted_info(
-    SseDeserializer deserializer,
-  );
-
-  @protected
   XhsVideo sse_decode_box_autoadd_xhs_video(SseDeserializer deserializer);
-
-  @protected
-  CroppedFrame sse_decode_cropped_frame(SseDeserializer deserializer);
-
-  @protected
-  ExtractionConfig sse_decode_extraction_config(SseDeserializer deserializer);
 
   @protected
   ExtractionStats sse_decode_extraction_stats(SseDeserializer deserializer);
 
   @protected
   double sse_decode_f_32(SseDeserializer deserializer);
-
-  @protected
-  FrameCropConfig sse_decode_frame_crop_config(SseDeserializer deserializer);
 
   @protected
   FrameExtractedInfo sse_decode_frame_extracted_info(
@@ -255,11 +236,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   List<String> sse_decode_list_String(SseDeserializer deserializer);
 
   @protected
-  List<CroppedFrame> sse_decode_list_cropped_frame(
-    SseDeserializer deserializer,
-  );
-
-  @protected
   List<FrameExtractedInfo> sse_decode_list_frame_extracted_info(
     SseDeserializer deserializer,
   );
@@ -271,21 +247,10 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   Float32List sse_decode_list_prim_f_32_strict(SseDeserializer deserializer);
 
   @protected
-  Uint64List sse_decode_list_prim_u_64_strict(SseDeserializer deserializer);
-
-  @protected
-  List<int> sse_decode_list_prim_u_8_loose(SseDeserializer deserializer);
-
-  @protected
   Uint8List sse_decode_list_prim_u_8_strict(SseDeserializer deserializer);
 
   @protected
   List<YFrameData> sse_decode_list_y_frame_data(SseDeserializer deserializer);
-
-  @protected
-  List<YuvFrameData> sse_decode_list_yuv_frame_data(
-    SseDeserializer deserializer,
-  );
 
   @protected
   NoteType sse_decode_note_type(SseDeserializer deserializer);
@@ -294,15 +259,7 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   String? sse_decode_opt_String(SseDeserializer deserializer);
 
   @protected
-  FrameExtractedInfo? sse_decode_opt_box_autoadd_frame_extracted_info(
-    SseDeserializer deserializer,
-  );
-
-  @protected
   XhsVideo? sse_decode_opt_box_autoadd_xhs_video(SseDeserializer deserializer);
-
-  @protected
-  StateConfig sse_decode_state_config(SseDeserializer deserializer);
 
   @protected
   int sse_decode_u_32(SseDeserializer deserializer);
@@ -335,9 +292,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   YFrameData sse_decode_y_frame_data(SseDeserializer deserializer);
 
   @protected
-  YuvFrameData sse_decode_yuv_frame_data(SseDeserializer deserializer);
-
-  @protected
   bool sse_decode_bool(SseDeserializer deserializer);
 
   @protected
@@ -349,15 +303,29 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void
-  sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFrameExtractorManager(
-    FrameExtractorManager self,
+  sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerAudioRecognizer(
+    AudioRecognizer self,
     SseSerializer serializer,
   );
 
   @protected
   void
-  sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFrameExtractorManager(
-    FrameExtractorManager self,
+  sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerVideoFrameExtractor(
+    VideoFrameExtractor self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void
+  sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerAudioRecognizer(
+    AudioRecognizer self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void
+  sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerVideoFrameExtractor(
+    VideoFrameExtractor self,
     SseSerializer serializer,
   );
 
@@ -370,8 +338,15 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void
-  sse_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFrameExtractorManager(
-    FrameExtractorManager self,
+  sse_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerAudioRecognizer(
+    AudioRecognizer self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void
+  sse_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerVideoFrameExtractor(
+    VideoFrameExtractor self,
     SseSerializer serializer,
   );
 
@@ -379,29 +354,8 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void sse_encode_String(String self, SseSerializer serializer);
 
   @protected
-  void sse_encode_box_autoadd_frame_crop_config(
-    FrameCropConfig self,
-    SseSerializer serializer,
-  );
-
-  @protected
-  void sse_encode_box_autoadd_frame_extracted_info(
-    FrameExtractedInfo self,
-    SseSerializer serializer,
-  );
-
-  @protected
   void sse_encode_box_autoadd_xhs_video(
     XhsVideo self,
-    SseSerializer serializer,
-  );
-
-  @protected
-  void sse_encode_cropped_frame(CroppedFrame self, SseSerializer serializer);
-
-  @protected
-  void sse_encode_extraction_config(
-    ExtractionConfig self,
     SseSerializer serializer,
   );
 
@@ -413,12 +367,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void sse_encode_f_32(double self, SseSerializer serializer);
-
-  @protected
-  void sse_encode_frame_crop_config(
-    FrameCropConfig self,
-    SseSerializer serializer,
-  );
 
   @protected
   void sse_encode_frame_extracted_info(
@@ -434,12 +382,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void sse_encode_list_String(List<String> self, SseSerializer serializer);
-
-  @protected
-  void sse_encode_list_cropped_frame(
-    List<CroppedFrame> self,
-    SseSerializer serializer,
-  );
 
   @protected
   void sse_encode_list_frame_extracted_info(
@@ -460,15 +402,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
-  void sse_encode_list_prim_u_64_strict(
-    Uint64List self,
-    SseSerializer serializer,
-  );
-
-  @protected
-  void sse_encode_list_prim_u_8_loose(List<int> self, SseSerializer serializer);
-
-  @protected
   void sse_encode_list_prim_u_8_strict(
     Uint8List self,
     SseSerializer serializer,
@@ -481,31 +414,16 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
-  void sse_encode_list_yuv_frame_data(
-    List<YuvFrameData> self,
-    SseSerializer serializer,
-  );
-
-  @protected
   void sse_encode_note_type(NoteType self, SseSerializer serializer);
 
   @protected
   void sse_encode_opt_String(String? self, SseSerializer serializer);
 
   @protected
-  void sse_encode_opt_box_autoadd_frame_extracted_info(
-    FrameExtractedInfo? self,
-    SseSerializer serializer,
-  );
-
-  @protected
   void sse_encode_opt_box_autoadd_xhs_video(
     XhsVideo? self,
     SseSerializer serializer,
   );
-
-  @protected
-  void sse_encode_state_config(StateConfig self, SseSerializer serializer);
 
   @protected
   void sse_encode_u_32(int self, SseSerializer serializer);
@@ -536,9 +454,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void sse_encode_y_frame_data(YFrameData self, SseSerializer serializer);
-
-  @protected
-  void sse_encode_yuv_frame_data(YuvFrameData self, SseSerializer serializer);
 
   @protected
   void sse_encode_bool(bool self, SseSerializer serializer);
@@ -593,36 +508,70 @@ class RustLibWire implements BaseWire {
           .asFunction<void Function(ffi.Pointer<ffi.Void>)>();
 
   void
-  rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFrameExtractorManager(
+  rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerAudioRecognizer(
     ffi.Pointer<ffi.Void> ptr,
   ) {
-    return _rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFrameExtractorManager(
+    return _rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerAudioRecognizer(
       ptr,
     );
   }
 
-  late final _rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFrameExtractorManagerPtr =
+  late final _rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerAudioRecognizerPtr =
       _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>)>>(
-        'frbgen_cook_lib_rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFrameExtractorManager',
+        'frbgen_cook_lib_rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerAudioRecognizer',
       );
-  late final _rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFrameExtractorManager =
-      _rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFrameExtractorManagerPtr
+  late final _rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerAudioRecognizer =
+      _rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerAudioRecognizerPtr
           .asFunction<void Function(ffi.Pointer<ffi.Void>)>();
 
   void
-  rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFrameExtractorManager(
+  rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerAudioRecognizer(
     ffi.Pointer<ffi.Void> ptr,
   ) {
-    return _rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFrameExtractorManager(
+    return _rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerAudioRecognizer(
       ptr,
     );
   }
 
-  late final _rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFrameExtractorManagerPtr =
+  late final _rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerAudioRecognizerPtr =
       _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>)>>(
-        'frbgen_cook_lib_rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFrameExtractorManager',
+        'frbgen_cook_lib_rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerAudioRecognizer',
       );
-  late final _rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFrameExtractorManager =
-      _rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFrameExtractorManagerPtr
+  late final _rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerAudioRecognizer =
+      _rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerAudioRecognizerPtr
+          .asFunction<void Function(ffi.Pointer<ffi.Void>)>();
+
+  void
+  rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerVideoFrameExtractor(
+    ffi.Pointer<ffi.Void> ptr,
+  ) {
+    return _rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerVideoFrameExtractor(
+      ptr,
+    );
+  }
+
+  late final _rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerVideoFrameExtractorPtr =
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>)>>(
+        'frbgen_cook_lib_rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerVideoFrameExtractor',
+      );
+  late final _rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerVideoFrameExtractor =
+      _rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerVideoFrameExtractorPtr
+          .asFunction<void Function(ffi.Pointer<ffi.Void>)>();
+
+  void
+  rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerVideoFrameExtractor(
+    ffi.Pointer<ffi.Void> ptr,
+  ) {
+    return _rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerVideoFrameExtractor(
+      ptr,
+    );
+  }
+
+  late final _rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerVideoFrameExtractorPtr =
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>)>>(
+        'frbgen_cook_lib_rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerVideoFrameExtractor',
+      );
+  late final _rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerVideoFrameExtractor =
+      _rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerVideoFrameExtractorPtr
           .asFunction<void Function(ffi.Pointer<ffi.Void>)>();
 }

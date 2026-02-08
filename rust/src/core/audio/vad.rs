@@ -5,15 +5,9 @@
 use super::error::AudioError;
 use log::{debug, info};
 use sherpa_ncnn::{Vad, VadConfig};
-use std::sync::Mutex;
-
-static VAD_INSTANCE: Mutex<Option<Vad>> = Mutex::new(None);
 
 /// Chunk size for VAD processing (16000 samples = 1 second at 16kHz)
-/// Larger chunks reduce function call overhead while staying within buffer limits
 const VAD_CHUNK_SIZE: usize = 16000;
-
-pub struct VadHandle;
 
 #[derive(Debug, Clone)]
 pub struct SpeechSegment {
@@ -21,25 +15,28 @@ pub struct SpeechSegment {
     pub end: f32,
 }
 
+/// VAD 实例（非全局，由 RecipeProcessor 持有）
+pub struct VadHandle {
+    vad: Vad,
+}
+
 impl VadHandle {
     /// Initialize VAD with Silero model
-    pub fn init(model_path: String) -> Result<(), AudioError> {
+    pub fn new(model_path: &str) -> Result<Self, AudioError> {
         info!("🔧 Initializing Silero VAD with model: {}", model_path);
 
-        let config = VadConfig::new(&model_path).with_num_threads(2);
+        let config = VadConfig::new(model_path).with_num_threads(2);
         let vad = Vad::new(config, 60.0).map_err(|e| {
             AudioError::SherpaNcnn(format!("Failed to create VAD: {}", e))
         })?;
 
-        let mut instance = VAD_INSTANCE.lock().unwrap();
-        *instance = Some(vad);
-
         info!("✅ Silero VAD initialized successfully");
-        Ok(())
+        Ok(Self { vad })
     }
 
     /// Detect speech segments using Silero VAD
     pub fn detect_speech_segments(
+        &mut self,
         samples: &[f32],
         sample_rate: u32,
     ) -> Result<Vec<SpeechSegment>, AudioError> {
@@ -54,14 +51,9 @@ impl VadHandle {
         let duration_secs = total_samples as f32 / sample_rate as f32;
         info!("🔍 Running Silero VAD on {:.1}s audio ({} samples)", duration_secs, total_samples);
 
-        let mut instance = VAD_INSTANCE.lock().unwrap();
-        let vad = instance.as_mut().ok_or_else(|| {
-            AudioError::SherpaNcnn("VAD not initialized. Call init() first.".to_string())
-        })?;
-
         // Reset VAD state for new audio
-        vad.reset();
-        vad.clear();
+        self.vad.reset();
+        self.vad.clear();
 
         // Feed audio in larger chunks for efficiency
         let num_chunks = (total_samples + VAD_CHUNK_SIZE - 1) / VAD_CHUNK_SIZE;
@@ -71,14 +63,14 @@ impl VadHandle {
             let start = i * VAD_CHUNK_SIZE;
             let end = (start + VAD_CHUNK_SIZE).min(total_samples);
             let chunk = &samples[start..end];
-            vad.accept_waveform(chunk);
+            self.vad.accept_waveform(chunk);
         }
 
         // Flush to detect the last segment
-        vad.flush();
+        self.vad.flush();
 
         // Collect all speech segments
-        let raw_segments = vad.get_all_segments();
+        let raw_segments = self.vad.get_all_segments();
         let total_duration = samples.len() as f32 / sample_rate as f32;
 
         info!("📊 Raw VAD segments: {}", raw_segments.len());
@@ -131,6 +123,12 @@ impl VadHandle {
         let end = end_sample.min(samples.len());
 
         samples[start..end].to_vec()
+    }
+}
+
+impl Drop for VadHandle {
+    fn drop(&mut self) {
+        info!("🗑️ VadHandle: releasing Silero VAD");
     }
 }
 
