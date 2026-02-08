@@ -1,7 +1,15 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:cook_lib/cook_lib.dart';
+import 'pages/video_frame_extractor_page.dart';
+import 'pages/transcribe_demo_page.dart';
 
-void main() {
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  if (Platform.isAndroid || Platform.isIOS) {
+    await RustLib.init();
+    print('RustLib initialized');
+  }
   runApp(const MyApp());
 }
 
@@ -12,25 +20,75 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Cook Lib Example',
-      home: const TestPage(),
+      theme: ThemeData(
+        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+        useMaterial3: true,
+      ),
+      home: const MainMenuPage(),
     );
   }
 }
 
-class TestPage extends StatefulWidget {
-  const TestPage({super.key});
+class MainMenuPage extends StatelessWidget {
+  const MainMenuPage({super.key});
 
   @override
-  State<TestPage> createState() => _TestPageState();
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('CookLib Demo')),
+      body: ListView(
+        children: [
+          ListTile(
+            leading: const Icon(Icons.mic),
+            title: const Text('语音转写'),
+            subtitle: const Text('Sherpa + Paraformer 语音识别'),
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const TranscribeDemoPage()),
+            ),
+          ),
+          const Divider(),
+          ListTile(
+            leading: const Icon(Icons.video_library),
+            title: const Text('视频帧提取'),
+            subtitle: const Text('文字检测 + 关键帧提取'),
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => const VideoFrameExtractorPage(),
+              ),
+            ),
+          ),
+          const Divider(),
+          ListTile(
+            leading: const Icon(Icons.play_arrow),
+            title: const Text('简单测试'),
+            subtitle: const Text('快速测试原生解码 API'),
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const SimpleTestPage()),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }
 
-class _TestPageState extends State<TestPage> {
+class SimpleTestPage extends StatefulWidget {
+  const SimpleTestPage({super.key});
+
+  @override
+  State<SimpleTestPage> createState() => _SimpleTestPageState();
+}
+
+class _SimpleTestPageState extends State<SimpleTestPage> {
   String _status = 'Ready';
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Cook Lib Test')),
+      appBar: AppBar(title: const Text('简单测试')),
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
