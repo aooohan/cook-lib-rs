@@ -1,7 +1,6 @@
 import 'dart:typed_data';
 import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'dart:io';
 import 'dart:async';
 import 'package:path_provider/path_provider.dart';
@@ -29,26 +28,17 @@ class _VideoFrameExtractorPageState extends State<VideoFrameExtractorPage> {
   DateTime? _startTime;
   double _elapsedTime = 0.0;
   Timer? _timer;
-  FrameExtractorManager? _extractor;
-
-  static const EventChannel _frameEventChannel = EventChannel(
-    'com.example.cook_lib/video_frame_events',
-  );
-  StreamSubscription? _frameSubscription;
-
-  static const int _batchSize = 8;
-  final List<YFrameData> _frameBatch = [];
+  VideoProcessor? _videoProcessor;
 
   @override
   void initState() {
     super.initState();
-    _initExtractor();
+    _initProcessor();
   }
 
-  void _initExtractor() async {
-    _extractor = FrameExtractorManager();
-    _extractor?.reset();
-    print('FrameExtractor initialized with CookingTextDetector');
+  void _initProcessor() {
+    _videoProcessor = VideoProcessor.create();
+    print('VideoProcessor created');
   }
 
   Future<void> _startExtraction() async {
@@ -65,9 +55,7 @@ class _VideoFrameExtractorPageState extends State<VideoFrameExtractorPage> {
       return;
     }
 
-    _extractor?.reset();
-    _frameSubscription?.cancel();
-    _frameBatch.clear();
+    _videoProcessor?.reset();
 
     setState(() {
       _busy = true;
@@ -91,122 +79,46 @@ class _VideoFrameExtractorPageState extends State<VideoFrameExtractorPage> {
     });
 
     try {
-      _frameSubscription = _frameEventChannel
-          .receiveBroadcastStream({'videoPath': videoPath})
-          .listen(
-            _onFrameEvent,
-            onError: _onFrameError,
-            onDone: _onFrameDone,
-            cancelOnError: false,
+      await for (final progress in _videoProcessor!.process(videoPath)) {
+        // Process extracted frames
+        for (final frame in progress.frames) {
+          _totalFrameBytes += frame.jpegData.length;
+          _extractedFramesList.add(
+            ExtractedFrameInfo(
+              frameNumber: frame.frameNumber.toInt(),
+              timestampMs: frame.timestampMs.toInt(),
+              confidence: frame.confidence,
+              width: frame.width,
+              height: frame.height,
+              jpegData: Uint8List.fromList(frame.jpegData),
+            ),
           );
+        }
+
+        // Update stats
+        final stats = _videoProcessor!.stats;
+        setState(() {
+          _progress = progress.progress;
+          _processedFrames = stats.processedFrames.toInt();
+          _extractedFrames = stats.extractedFrames.toInt();
+          _status = progress.isComplete
+              ? '完成 - 提取 $_extractedFrames 帧，总大小 ${(_totalFrameBytes / 1024).toStringAsFixed(1)}KB'
+              : '处理中... ${(_progress * 100).toStringAsFixed(1)}%';
+        });
+
+        if (progress.isComplete) {
+          break;
+        }
+      }
     } catch (e) {
       setState(() {
         _status = '错误: $e';
+      });
+    } finally {
+      _timer?.cancel();
+      setState(() {
         _busy = false;
       });
-      _timer?.cancel();
-    }
-  }
-
-  void _onFrameEvent(dynamic event) {
-    if (event is Map) {
-      final type = event['type'] as String?;
-
-      if (type == 'frame') {
-        _collectFrame(event);
-      } else if (type == 'progress') {
-        setState(() {
-          _progress = (event['progress'] as num?)?.toDouble() ?? 0.0;
-          _status = '处理中... ${(_progress * 100).toStringAsFixed(1)}%';
-        });
-      } else if (type == 'complete') {
-        _flushBatch();
-        final totalKB = (_totalFrameBytes / 1024).toStringAsFixed(1);
-        setState(() {
-          _status = '完成 - 提取 $_extractedFrames 帧，总大小 ${totalKB}KB';
-          _busy = false;
-          _progress = 1.0;
-        });
-        _timer?.cancel();
-        _frameSubscription?.cancel();
-      }
-    }
-  }
-
-  void _onFrameError(dynamic error) {
-    setState(() {
-      _status = '错误: $error';
-      _busy = false;
-    });
-    _timer?.cancel();
-  }
-
-  void _onFrameDone() {
-    _flushBatch();
-    setState(() {
-      _busy = false;
-    });
-    _timer?.cancel();
-  }
-
-  void _collectFrame(Map event) {
-    final width = event['width'] as int? ?? 0;
-    final height = event['height'] as int? ?? 0;
-    final yPlane = event['yPlane'] as Uint8List?;
-    final timestampMs = event['timestampMs'] as int? ?? 0;
-    final frameNumber = event['frameNumber'] as int? ?? 0;
-
-    if (width > 0 && height > 0 && yPlane != null) {
-      _frameBatch.add(
-        YFrameData(
-          width: width,
-          height: height,
-          yPlane: yPlane,
-          timestampMs: BigInt.from(timestampMs),
-          frameNumber: BigInt.from(frameNumber),
-        ),
-      );
-
-      if (_frameBatch.length >= _batchSize) {
-        _flushBatch();
-      }
-    }
-  }
-
-  Future<void> _flushBatch() async {
-    if (_frameBatch.isEmpty || _extractor == null) return;
-
-    try {
-      final batchToProcess = _frameBatch.toList();
-      _frameBatch.clear();
-
-      final results = await _extractor!.processBatch(frames: batchToProcess);
-
-      int batchBytes = 0;
-      for (final result in results) {
-        batchBytes += result.jpegData.length;
-        _extractedFramesList.add(
-          ExtractedFrameInfo(
-            frameNumber: result.frameNumber.toInt(),
-            timestampMs: result.timestampMs.toInt(),
-            confidence: result.confidence,
-            width: result.width,
-            height: result.height,
-            jpegData: Uint8List.fromList(result.jpegData),
-          ),
-        );
-      }
-
-      final stats = _extractor!.getStats();
-      if (mounted) {
-        setState(() {
-          _processedFrames = stats.processedFrames.toInt();
-          _extractedFrames = stats.extractedFrames.toInt();
-          _totalFrameBytes += batchBytes;
-        });
-      }
-    } catch (e) {
-      print('Batch processing error: $e');
     }
   }
 
@@ -238,8 +150,8 @@ class _VideoFrameExtractorPageState extends State<VideoFrameExtractorPage> {
     print('Frames saved to: ${saveDir.path}');
   }
 
-  void _stopExtraction() {
-    _frameSubscription?.cancel();
+  Future<void> _stopExtraction() async {
+    await _videoProcessor?.stop();
     setState(() {
       _busy = false;
       _status = '已停止';
@@ -506,7 +418,7 @@ class _VideoFrameExtractorPageState extends State<VideoFrameExtractorPage> {
   @override
   void dispose() {
     _timer?.cancel();
-    _frameSubscription?.cancel();
+    _videoProcessor?.dispose();
     _videoPathController.dispose();
     super.dispose();
   }

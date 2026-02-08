@@ -19,19 +19,26 @@ class _TranscribeDemoPageState extends State<TranscribeDemoPage> {
     text: '/data/local/tmp/lmth-cook.mp4',
   );
   String _modelPath = '初始化中...';
-  String _vadModelPath = '';
   String _status = '初始化中...';
   String _transcript = '';
   bool _busy = false;
   DateTime? _startTime;
   double _elapsedTime = 0.0;
-  bool _isSherpaInitialized = false;
   Timer? _timer;
+
+  AudioProcessor? _audioProcessor;
 
   @override
   void initState() {
     super.initState();
     _requestPermissionsAndInitialize();
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    _audioProcessor?.dispose();
+    super.dispose();
   }
 
   Future<void> _requestPermissionsAndInitialize() async {
@@ -48,17 +55,17 @@ class _TranscribeDemoPageState extends State<TranscribeDemoPage> {
   Future<void> _initializeModel() async {
     try {
       final docDir = await getApplicationDocumentsDirectory();
-      final modelDir = Directory('${docDir.path}/sherpa-ncnn-zh-en');
+      final modelsDir = docDir.path;
 
-      if (!modelDir.existsSync()) {
+      // Copy Sherpa-NCNN model
+      final sherpaDir = Directory('$modelsDir/sherpa-ncnn');
+      if (!sherpaDir.existsSync()) {
         setState(() {
-          _status = '复制模型文件中...';
+          _status = '复制ASR模型文件中...';
         });
-        modelDir.createSync(recursive: true);
+        sherpaDir.createSync(recursive: true);
 
-        // Copy ncnn model files
         const modelPrefix = 'models/zipformer-ncnn';
-
         final files = [
           'encoder_jit_trace-pnnx.ncnn.param',
           'encoder_jit_trace-pnnx.ncnn.bin',
@@ -72,55 +79,41 @@ class _TranscribeDemoPageState extends State<TranscribeDemoPage> {
         for (final fileName in files) {
           print('Copying $fileName...');
           final data = await rootBundle.load('$modelPrefix/$fileName');
-          await File(
-            '${modelDir.path}/$fileName',
-          ).writeAsBytes(data.buffer.asUint8List());
+          await File('${sherpaDir.path}/$fileName')
+              .writeAsBytes(data.buffer.asUint8List());
         }
-        print('All model files copied');
+        print('ASR model files copied');
       }
 
       // Copy Silero VAD model
-      final vadModelDir = Directory('${docDir.path}/silero-vad');
-      if (!vadModelDir.existsSync()) {
+      final vadDir = Directory('$modelsDir/silero-vad');
+      if (!vadDir.existsSync()) {
         setState(() {
           _status = '复制VAD模型文件中...';
         });
-        vadModelDir.createSync(recursive: true);
+        vadDir.createSync(recursive: true);
 
         final vadFiles = ['silero.ncnn.param', 'silero.ncnn.bin'];
         for (final fileName in vadFiles) {
           print('Copying VAD model: $fileName...');
           final data = await rootBundle.load('models/silero-vad/$fileName');
-          await File(
-            '${vadModelDir.path}/$fileName',
-          ).writeAsBytes(data.buffer.asUint8List());
+          await File('${vadDir.path}/$fileName')
+              .writeAsBytes(data.buffer.asUint8List());
         }
         print('Silero VAD model copied');
       }
 
       setState(() {
-        _modelPath = modelDir.path;
-        _vadModelPath = vadModelDir.path;
-        _status = '初始化Sherpa模型...';
+        _modelPath = modelsDir;
+        _status = '初始化AudioProcessor...';
       });
 
-      print('Initializing Sherpa-NCNN with model: $_modelPath');
-      initSherpa(modelPath: _modelPath);
-      print('Sherpa-NCNN initialized');
-
-      // Initialize Silero VAD with model path
-      print('Initializing Silero VAD with model: $_vadModelPath');
-      try {
-        initVad(vadModelPath: _vadModelPath);
-        print('Silero VAD initialized');
-      } catch (e) {
-        print('VAD initialization failed: $e');
-        throw Exception('VAD initialization failed: $e');
-      }
+      print('Creating AudioProcessor with models: $modelsDir');
+      _audioProcessor = await AudioProcessor.create(modelsDir: modelsDir);
+      print('AudioProcessor created');
 
       setState(() {
         _status = '已就绪，请输入视频路径';
-        _isSherpaInitialized = true;
       });
     } catch (e) {
       setState(() {
@@ -164,12 +157,13 @@ class _TranscribeDemoPageState extends State<TranscribeDemoPage> {
 
   Future<void> _run() async {
     if (_busy) return;
-    if (!_isSherpaInitialized) {
+    if (_audioProcessor == null) {
       setState(() {
-        _status = 'Sherpa未初始化，请等待初始化完成';
+        _status = 'AudioProcessor未初始化，请等待初始化完成';
       });
       return;
     }
+
     setState(() {
       _busy = true;
       _status = '处理中...';
@@ -177,6 +171,7 @@ class _TranscribeDemoPageState extends State<TranscribeDemoPage> {
       _startTime = DateTime.now();
       _elapsedTime = 0.0;
     });
+
     _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
       if (_startTime != null) {
         setState(() {
@@ -185,6 +180,7 @@ class _TranscribeDemoPageState extends State<TranscribeDemoPage> {
         });
       }
     });
+
     try {
       String videoPath = _videoPathController.text.trim();
       if (videoPath.isEmpty) {
@@ -201,24 +197,23 @@ class _TranscribeDemoPageState extends State<TranscribeDemoPage> {
         throw Exception('视频文件不存在: $videoPath');
       }
 
-      setState(() {
-        _status = '解码视频到WAV...';
-      });
-      print('Decoding video file: $videoPath');
-      final wavPath = await MediaNativeDecoder.decodeAudioToWav(videoPath);
-      print('WAV file created: $wavPath');
+      // Use AudioProcessor's Stream-based API for progress updates
+      await for (final progress in _audioProcessor!.process(
+        videoPath,
+        language: 'zh',
+      )) {
+        setState(() {
+          _status = progress.message;
+        });
+      }
 
-      setState(() {
-        _status = '转写音频中...';
-      });
-      print('Starting transcription (this may take a while)...');
-      final text = await transcribeAudio(path: wavPath, language: 'zh');
-      print('Transcription complete!');
-
-      setState(() {
-        _status = '完成';
-        _transcript = text;
-      });
+      final result = _audioProcessor!.lastResult;
+      if (result != null) {
+        setState(() {
+          _status = '完成';
+          _transcript = result.text;
+        });
+      }
     } catch (e) {
       print('Error: $e');
       setState(() {

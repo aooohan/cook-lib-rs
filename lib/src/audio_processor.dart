@@ -131,27 +131,6 @@ class AudioProcessor {
     return _lastResult!;
   }
 
-  /// 直接转录 WAV 文件（跳过解码步骤）
-  Future<String> transcribeWav(String wavPath, {String? language}) async {
-    return await _recognizer.transcribeAudio(
-      path: wavPath,
-      language: language,
-    );
-  }
-
-  /// 转录 PCM 数据
-  Future<String> transcribePcm({
-    required List<double> pcm,
-    required int sampleRate,
-    String? language,
-  }) async {
-    return await _recognizer.transcribePcm(
-      pcm: pcm,
-      sampleRate: sampleRate,
-      language: language,
-    );
-  }
-
   /// 释放资源
   void dispose() {
     _recognizer.dispose();

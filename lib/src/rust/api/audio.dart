@@ -7,7 +7,7 @@ import '../core/audio/error.dart';
 import '../frb_generated.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
-// These functions are ignored because they are not marked as `pub`: `format_timestamp`
+// These functions are ignored because they are not marked as `pub`: `format_timestamp`, `transcribe_pcm`
 // These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `drop`
 
 // Rust type: RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<AudioRecognizer>>
@@ -27,11 +27,4 @@ abstract class AudioRecognizer implements RustOpaqueInterface {
 
   /// 转录音频文件（WAV 格式）
   Future<String> transcribeAudio({required String path, String? language});
-
-  /// 转录 PCM 数据
-  Future<String> transcribePcm({
-    required List<double> pcm,
-    required int sampleRate,
-    String? language,
-  });
 }

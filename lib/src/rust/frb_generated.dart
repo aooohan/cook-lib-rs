@@ -69,7 +69,7 @@ class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
   String get codegenVersion => '2.11.1';
 
   @override
-  int get rustContentHash => 1919093226;
+  int get rustContentHash => -223892292;
 
   static const kDefaultExternalLibraryLoaderConfig =
       ExternalLibraryLoaderConfig(
@@ -89,13 +89,6 @@ abstract class RustLibApi extends BaseApi {
   Future<String> crateApiAudioAudioRecognizerTranscribeAudio({
     required AudioRecognizer that,
     required String path,
-    String? language,
-  });
-
-  Future<String> crateApiAudioAudioRecognizerTranscribePcm({
-    required AudioRecognizer that,
-    required List<double> pcm,
-    required int sampleRate,
     String? language,
   });
 
@@ -264,55 +257,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       );
 
   @override
-  Future<String> crateApiAudioAudioRecognizerTranscribePcm({
-    required AudioRecognizer that,
-    required List<double> pcm,
-    required int sampleRate,
-    String? language,
-  }) {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
-          final serializer = SseSerializer(generalizedFrbRustBinding);
-          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerAudioRecognizer(
-            that,
-            serializer,
-          );
-          sse_encode_list_prim_f_32_loose(pcm, serializer);
-          sse_encode_u_32(sampleRate, serializer);
-          sse_encode_opt_String(language, serializer);
-          pdeCallFfi(
-            generalizedFrbRustBinding,
-            serializer,
-            funcId: 4,
-            port: port_,
-          );
-        },
-        codec: SseCodec(
-          decodeSuccessData: sse_decode_String,
-          decodeErrorData:
-              sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerAudioError,
-        ),
-        constMeta: kCrateApiAudioAudioRecognizerTranscribePcmConstMeta,
-        argValues: [that, pcm, sampleRate, language],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta get kCrateApiAudioAudioRecognizerTranscribePcmConstMeta =>
-      const TaskConstMeta(
-        debugName: "AudioRecognizer_transcribe_pcm",
-        argNames: ["that", "pcm", "sampleRate", "language"],
-      );
-
-  @override
   VideoFrameExtractor crateApiVideoVideoFrameExtractorCreate() {
     return handler.executeSync(
       SyncTask(
         callFfi: () {
           final serializer = SseSerializer(generalizedFrbRustBinding);
-          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 5)!;
+          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 4)!;
         },
         codec: SseCodec(
           decodeSuccessData:
@@ -350,7 +300,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 6,
+            funcId: 5,
             port: port_,
           );
         },
@@ -383,7 +333,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
             that,
             serializer,
           );
-          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 7)!;
+          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 6)!;
         },
         codec: SseCodec(
           decodeSuccessData: sse_decode_unit,
@@ -414,7 +364,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
             that,
             serializer,
           );
-          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 8)!;
+          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 7)!;
         },
         codec: SseCodec(
           decodeSuccessData: sse_decode_extraction_stats,
@@ -442,7 +392,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 9,
+            funcId: 8,
             port: port_,
           );
         },
@@ -467,7 +417,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         callFfi: () {
           final serializer = SseSerializer(generalizedFrbRustBinding);
           sse_encode_String(text, serializer);
-          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 10)!;
+          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 9)!;
         },
         codec: SseCodec(
           decodeSuccessData: sse_decode_xhs_article,
@@ -490,7 +440,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         callFfi: () {
           final serializer = SseSerializer(generalizedFrbRustBinding);
           sse_encode_String(url, serializer);
-          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 11)!;
+          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 10)!;
         },
         codec: SseCodec(
           decodeSuccessData: sse_decode_xhs_article,
@@ -670,18 +620,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   List<FrameExtractedInfo> dco_decode_list_frame_extracted_info(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return (raw as List<dynamic>).map(dco_decode_frame_extracted_info).toList();
-  }
-
-  @protected
-  List<double> dco_decode_list_prim_f_32_loose(dynamic raw) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    return raw as List<double>;
-  }
-
-  @protected
-  Float32List dco_decode_list_prim_f_32_strict(dynamic raw) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    return raw as Float32List;
   }
 
   @protected
@@ -996,20 +934,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       ans_.add(sse_decode_frame_extracted_info(deserializer));
     }
     return ans_;
-  }
-
-  @protected
-  List<double> sse_decode_list_prim_f_32_loose(SseDeserializer deserializer) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    var len_ = sse_decode_i_32(deserializer);
-    return deserializer.buffer.getFloat32List(len_);
-  }
-
-  @protected
-  Float32List sse_decode_list_prim_f_32_strict(SseDeserializer deserializer) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    var len_ = sse_decode_i_32(deserializer);
-    return deserializer.buffer.getFloat32List(len_);
   }
 
   @protected
@@ -1348,28 +1272,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  void sse_encode_list_prim_f_32_loose(
-    List<double> self,
-    SseSerializer serializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_i_32(self.length, serializer);
-    serializer.buffer.putFloat32List(
-      self is Float32List ? self : Float32List.fromList(self),
-    );
-  }
-
-  @protected
-  void sse_encode_list_prim_f_32_strict(
-    Float32List self,
-    SseSerializer serializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_i_32(self.length, serializer);
-    serializer.buffer.putFloat32List(self);
-  }
-
-  @protected
   void sse_encode_list_prim_u_8_strict(
     Uint8List self,
     SseSerializer serializer,
@@ -1550,18 +1452,6 @@ class AudioRecognizerImpl extends RustOpaque implements AudioRecognizer {
         path: path,
         language: language,
       );
-
-  /// 转录 PCM 数据
-  Future<String> transcribePcm({
-    required List<double> pcm,
-    required int sampleRate,
-    String? language,
-  }) => RustLib.instance.api.crateApiAudioAudioRecognizerTranscribePcm(
-    that: this,
-    pcm: pcm,
-    sampleRate: sampleRate,
-    language: language,
-  );
 }
 
 @sealed

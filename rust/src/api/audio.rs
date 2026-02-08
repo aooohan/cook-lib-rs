@@ -81,9 +81,8 @@ impl AudioRecognizer {
         }
     }
 
-    /// 转录 PCM 数据
-    #[frb(dart_async)]
-    pub async fn transcribe_pcm(
+    /// 转录 PCM 数据 (内部使用)
+    async fn transcribe_pcm(
         &self,
         pcm: Vec<f32>,
         sample_rate: u32,

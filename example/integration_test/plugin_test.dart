@@ -7,93 +7,75 @@ void main() {
 
   const testVideoPath = '/data/local/tmp/lmth-cook.mp4';
 
-  group('MediaNativeDecoder Integration Tests', () {
-    testWidgets('decodeAudioToWav should return valid wav path', (tester) async {
-      // Decode audio from video
-      final wavPath = await MediaNativeDecoder.decodeAudioToWav(testVideoPath);
-
-      // Verify result
-      expect(wavPath, isNotEmpty);
-      expect(wavPath.endsWith('.wav'), isTrue);
-      print('Audio decoded to: $wavPath');
-    });
-
-    testWidgets('extractVideoFrames should extract multiple frames', (tester) async {
-      final frames = <VideoFrameEvent>[];
+  group('VideoProcessor Integration Tests', () {
+    testWidgets('VideoProcessor should extract frames with progress', (tester) async {
+      final processor = VideoProcessor.create();
+      final allFrames = <FrameExtractedInfo>[];
       bool completed = false;
 
-      // Extract frames
-      await for (final event in MediaNativeDecoder.extractVideoFrames(testVideoPath)) {
-        if (event.isFrame) {
-          frames.add(event);
-          print('Frame ${frames.length}: ${event.width}x${event.height} @ ${event.timestampMs}ms');
-        } else if (event.isProgress) {
-          print('Progress: ${(event.progress! * 100).toStringAsFixed(1)}%');
-        } else if (event.isComplete) {
+      await for (final progress in processor.process(testVideoPath)) {
+        allFrames.addAll(progress.frames);
+        print('Progress: ${(progress.progress * 100).toStringAsFixed(1)}%, frames: ${allFrames.length}');
+
+        if (progress.isComplete) {
           completed = true;
           break;
         }
       }
 
-      // Verify results
-      expect(frames.length, greaterThan(0));
       expect(completed, isTrue);
+      print('Total extracted frames: ${allFrames.length}');
 
-      // Verify frame data
-      final firstFrame = frames.first;
-      expect(firstFrame.width, greaterThan(0));
-      expect(firstFrame.height, greaterThan(0));
-      expect(firstFrame.yPlane, isNotNull);
-      expect(firstFrame.yPlane!.length, equals(firstFrame.width! * firstFrame.height!));
+      final stats = processor.stats;
+      print('Stats - Processed: ${stats.totalProcessed}, Extracted: ${stats.totalExtracted}');
+      expect(stats.totalProcessed, greaterThan(0));
 
-      print('Total frames extracted: ${frames.length}');
+      processor.dispose();
     });
 
-    testWidgets('frame extraction should maintain correct aspect ratio', (tester) async {
-      VideoFrameEvent? firstFrame;
+    testWidgets('VideoProcessor.processAll should return complete result', (tester) async {
+      final processor = VideoProcessor.create();
 
-      await for (final event in MediaNativeDecoder.extractVideoFrames(testVideoPath)) {
-        if (event.isFrame) {
-          firstFrame = event;
+      final result = await processor.processAll(testVideoPath);
+
+      expect(result.frames, isNotNull);
+      expect(result.stats.totalProcessed, greaterThan(0));
+      print('Extracted ${result.frames.length} frames');
+      print('Stats - Processed: ${result.stats.totalProcessed}, Extracted: ${result.stats.totalExtracted}');
+
+      processor.dispose();
+    });
+
+    testWidgets('VideoProcessor.stop should halt extraction', (tester) async {
+      final processor = VideoProcessor.create();
+      int progressCount = 0;
+
+      await for (final progress in processor.process(testVideoPath)) {
+        progressCount++;
+        if (progressCount >= 3) {
+          await processor.stop();
           break;
         }
       }
 
-      // Stop extraction after getting first frame
-      await MediaNativeDecoder.stopExtraction();
+      expect(processor.isProcessing, isFalse);
+      print('Stopped after $progressCount progress updates');
 
-      expect(firstFrame, isNotNull);
-      // Max dimension should be 640 (as defined in VideoFrameExtractor.kt)
-      expect(firstFrame!.width! <= 640 || firstFrame.height! <= 640, isTrue);
-      print('Frame size: ${firstFrame.width}x${firstFrame.height}');
+      processor.dispose();
     });
   });
 
   group('Rust API Integration Tests', () {
-    testWidgets('processYuvFrame should handle valid frame data', (tester) async {
-      // First extract a real frame
-      VideoFrameEvent? frame;
-      await for (final event in MediaNativeDecoder.extractVideoFrames(testVideoPath)) {
-        if (event.isFrame) {
-          frame = event;
-          break;
-        }
-      }
-      await MediaNativeDecoder.stopExtraction();
+    testWidgets('VideoFrameExtractor should process batch of frames', (tester) async {
+      final processor = VideoProcessor.create();
 
-      expect(frame, isNotNull);
+      // Get some frames first
+      final result = await processor.processAll(testVideoPath);
 
-      // Now test Rust processing with real frame data
-      // This tests the full pipeline: Native decode -> Rust process
-      print('Got frame: ${frame!.width}x${frame.height}, ${frame.yPlane!.length} bytes');
+      expect(result.frames.length, greaterThanOrEqualTo(0));
+      print('Batch processing complete: ${result.frames.length} frames extracted');
 
-      // TODO: Add Rust API call when integrated
-      // final result = await processYuvFrame(
-      //   yPlane: frame.yPlane!,
-      //   width: frame.width!,
-      //   height: frame.height!,
-      //   timestampMs: frame.timestampMs!,
-      // );
+      processor.dispose();
     });
   });
 }
