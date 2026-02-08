@@ -1,0 +1,18 @@
+# 发布时排除的文件
+example/
+.github/
+.vscode/
+.idea/
+*.log
+
+# Rust 构建产物（已编译的库在 android/src/main/jniLibs/ 和 ios/Frameworks/）
+rust/target/
+
+# 开发文件
+justfile
+CLAUDE.md
+.claude/
+
+# 测试文件
+test/
+integration_test/

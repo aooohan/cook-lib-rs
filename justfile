@@ -145,3 +145,79 @@ fmt:
 # Rust clippy 检查
 clippy:
     cd rust && cargo clippy
+
+# ============ 发布 ============
+
+# 发布目录
+publish_dir := "dist/cook_lib"
+
+# 打包发布版本（只包含必要文件）
+package-publish version="0.0.0-dev":
+    #!/usr/bin/env bash
+    set -euo pipefail
+
+    echo "📦 Creating publish package v{{version}}..."
+    rm -rf dist
+    mkdir -p {{publish_dir}}/android/src/main
+    mkdir -p {{publish_dir}}/ios
+    mkdir -p {{publish_dir}}/lib/src
+
+    # Dart 代码
+    cp lib/cook_lib.dart {{publish_dir}}/lib/
+    cp lib/src/native_decoder.dart {{publish_dir}}/lib/src/
+    cp -r lib/src/rust {{publish_dir}}/lib/src/
+
+    # Android 插件
+    cp android/build.gradle {{publish_dir}}/android/
+    cp android/settings.gradle {{publish_dir}}/android/ 2>/dev/null || true
+    cp android/src/main/AndroidManifest.xml {{publish_dir}}/android/src/main/
+    cp -r android/src/main/kotlin {{publish_dir}}/android/src/main/
+    cp -r android/src/main/jniLibs {{publish_dir}}/android/src/main/ 2>/dev/null || echo "⚠️  No jniLibs (run build-android-all first)"
+
+    # iOS 插件
+    cp ios/cook_lib.podspec {{publish_dir}}/ios/ 2>/dev/null || true
+    cp -r ios/Classes {{publish_dir}}/ios/ 2>/dev/null || true
+    cp -r ios/Frameworks {{publish_dir}}/ios/ 2>/dev/null || echo "⚠️  No Frameworks (run build-ios-all first)"
+
+    # 根目录文件
+    sed "s/^version: .*/version: {{version}}/" pubspec.yaml > {{publish_dir}}/pubspec.yaml
+    cp LICENSE {{publish_dir}}/ 2>/dev/null || true
+    cp README.md {{publish_dir}}/ 2>/dev/null || true
+    cp CHANGELOG.md {{publish_dir}}/ 2>/dev/null || true
+
+    # 清理
+    find {{publish_dir}} -name ".DS_Store" -delete 2>/dev/null || true
+    find {{publish_dir}} -name "*.log" -delete 2>/dev/null || true
+
+    echo ""
+    echo "✅ Package created at {{publish_dir}}"
+    echo "📊 Size: $(du -sh {{publish_dir}} | cut -f1)"
+    echo ""
+    echo "Contents:"
+    find {{publish_dir}} -type f | head -30
+    echo "..."
+
+# 创建发布压缩包
+package-archive version="0.0.0-dev": (package-publish version)
+    #!/usr/bin/env bash
+    set -euo pipefail
+
+    cd dist
+    echo "📦 Creating archives..."
+    tar -czvf cook_lib-v{{version}}.tar.gz cook_lib/
+    zip -r cook_lib-v{{version}}.zip cook_lib/
+
+    echo ""
+    echo "✅ Archives created:"
+    ls -lh cook_lib-v{{version}}.*
+
+# 完整构建 + 打包 (本地测试发布流程)
+release-local version="0.0.0-dev": build-all (package-archive version)
+    @echo ""
+    @echo "🎉 Local release complete!"
+    @echo "   dist/cook_lib-v{{version}}.tar.gz"
+    @echo "   dist/cook_lib-v{{version}}.zip"
+
+# 清理发布目录
+clean-publish:
+    rm -rf dist/
