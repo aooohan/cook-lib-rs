@@ -76,39 +76,73 @@ jobs:
 
   build-ios:
     runs-on: macos-latest
+    strategy:
+      matrix:
+        target:
+          - aarch64-apple-ios
+          - aarch64-apple-ios-sim
+          - x86_64-apple-ios
     steps:
       - uses: actions/checkout@v4
 
       - name: Setup Rust
         uses: dtolnay/rust-toolchain@stable
         with:
-          targets: aarch64-apple-ios,aarch64-apple-ios-sim,x86_64-apple-ios
+          targets: ${{ matrix.target }}
 
-      - name: Build iOS libraries
+      - name: Build iOS library
         run: |
           cd rust
-          cargo build --release --target aarch64-apple-ios
-          cargo build --release --target aarch64-apple-ios-sim
-          cargo build --release --target x86_64-apple-ios
+          cargo build --release --target ${{ matrix.target }}
+
+      - name: Upload iOS artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ios-${{ matrix.target }}
+          path: rust/target/${{ matrix.target }}/release/libcook_lib.a
+
+  package-ios:
+    needs: [build-ios]
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download iOS device artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: ios-aarch64-apple-ios
+          path: artifacts/aarch64-apple-ios/
+
+      - name: Download iOS simulator arm64 artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: ios-aarch64-apple-ios-sim
+          path: artifacts/aarch64-apple-ios-sim/
+
+      - name: Download iOS simulator x86_64 artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: ios-x86_64-apple-ios
+          path: artifacts/x86_64-apple-ios/
 
       - name: Create XCFramework
         run: |
           mkdir -p ios/Frameworks
 
           # Create fat library for simulators
-          mkdir -p rust/target/ios-simulator-universal
+          mkdir -p artifacts/ios-simulator-universal
           lipo -create \
-            rust/target/aarch64-apple-ios-sim/release/libcook_lib.a \
-            rust/target/x86_64-apple-ios/release/libcook_lib.a \
-            -output rust/target/ios-simulator-universal/libcook_lib.a
+            artifacts/aarch64-apple-ios-sim/libcook_lib.a \
+            artifacts/x86_64-apple-ios/libcook_lib.a \
+            -output artifacts/ios-simulator-universal/libcook_lib.a
 
           # Create XCFramework
           xcodebuild -create-xcframework \
-            -library rust/target/aarch64-apple-ios/release/libcook_lib.a \
-            -library rust/target/ios-simulator-universal/libcook_lib.a \
+            -library artifacts/aarch64-apple-ios/libcook_lib.a \
+            -library artifacts/ios-simulator-universal/libcook_lib.a \
             -output ios/Frameworks/cook_lib.xcframework
 
-      - name: Upload iOS artifacts
+      - name: Upload iOS XCFramework
         uses: actions/upload-artifact@v4
         with:
           name: ios-libs
@@ -122,7 +156,7 @@ jobs:
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.24.0'
+          flutter-version: '3.29.0'
           channel: 'stable'
 
       - name: Setup Rust
@@ -143,7 +177,7 @@ jobs:
           path: lib/src/rust/
 
   commit-and-release:
-    needs: [build-android, build-ios, generate-bindings]
+    needs: [build-android, package-ios, generate-bindings]
     runs-on: ubuntu-latest
     permissions:
       contents: write

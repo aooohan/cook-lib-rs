@@ -34,11 +34,16 @@ cook_lib/
 │       └── models/                 # 数据模型
 ├── lib/                            # Dart 代码
 │   ├── cook_lib.dart               # 主入口，导出所有 API
+│   ├── src/native_decoder.dart     # 原生解码器 API
 │   └── src/rust/                   # flutter_rust_bridge 生成的绑定
 │       ├── frb_generated.dart
 │       ├── api/
 │       └── ...
 ├── android/
+│   ├── src/main/kotlin/.../
+│   │   ├── CookLibPlugin.kt        # Flutter 插件入口
+│   │   ├── AudioDecoder.kt         # 音频解码 (AAC → WAV)
+│   │   └── VideoFrameExtractor.kt  # 视频帧提取 (MediaCodec)
 │   └── src/main/jniLibs/           # Android 原生库
 │       ├── arm64-v8a/
 │       ├── armeabi-v7a/
@@ -46,10 +51,18 @@ cook_lib/
 │       └── x86/
 ├── ios/
 │   └── Frameworks/                 # iOS XCFramework
+├── example/                        # 测试 App
+│   ├── lib/
+│   │   ├── main.dart               # 主菜单
+│   │   └── pages/
+│   │       ├── video_frame_extractor_page.dart  # 视频帧提取测试
+│   │       └── transcribe_demo_page.dart        # 语音转写测试
+│   └── integration_test/
+│       └── plugin_test.dart        # 自动化集成测试
 ├── .github/workflows/
 │   └── release.yml                 # CI 构建和发布
 ├── flutter_rust_bridge.yaml        # FRB 配置
-└── pubspec.yaml                    # ffiPlugin: true
+└── pubspec.yaml                    # ffiPlugin: true + pluginClass
 ```
 
 ## 技术栈
