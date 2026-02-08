@@ -7,10 +7,10 @@ void main() {
 
   const testVideoPath = '/data/local/tmp/lmth-cook.mp4';
 
-  group('NativeDecoder Integration Tests', () {
+  group('MediaNativeDecoder Integration Tests', () {
     testWidgets('decodeAudioToWav should return valid wav path', (tester) async {
       // Decode audio from video
-      final wavPath = await NativeDecoder.decodeAudioToWav(testVideoPath);
+      final wavPath = await MediaNativeDecoder.decodeAudioToWav(testVideoPath);
 
       // Verify result
       expect(wavPath, isNotEmpty);
@@ -23,7 +23,7 @@ void main() {
       bool completed = false;
 
       // Extract frames
-      await for (final event in NativeDecoder.extractVideoFrames(testVideoPath)) {
+      await for (final event in MediaNativeDecoder.extractVideoFrames(testVideoPath)) {
         if (event.isFrame) {
           frames.add(event);
           print('Frame ${frames.length}: ${event.width}x${event.height} @ ${event.timestampMs}ms');
@@ -52,7 +52,7 @@ void main() {
     testWidgets('frame extraction should maintain correct aspect ratio', (tester) async {
       VideoFrameEvent? firstFrame;
 
-      await for (final event in NativeDecoder.extractVideoFrames(testVideoPath)) {
+      await for (final event in MediaNativeDecoder.extractVideoFrames(testVideoPath)) {
         if (event.isFrame) {
           firstFrame = event;
           break;
@@ -60,7 +60,7 @@ void main() {
       }
 
       // Stop extraction after getting first frame
-      await NativeDecoder.stopExtraction();
+      await MediaNativeDecoder.stopExtraction();
 
       expect(firstFrame, isNotNull);
       // Max dimension should be 640 (as defined in VideoFrameExtractor.kt)
@@ -73,13 +73,13 @@ void main() {
     testWidgets('processYuvFrame should handle valid frame data', (tester) async {
       // First extract a real frame
       VideoFrameEvent? frame;
-      await for (final event in NativeDecoder.extractVideoFrames(testVideoPath)) {
+      await for (final event in MediaNativeDecoder.extractVideoFrames(testVideoPath)) {
         if (event.isFrame) {
           frame = event;
           break;
         }
       }
-      await NativeDecoder.stopExtraction();
+      await MediaNativeDecoder.stopExtraction();
 
       expect(frame, isNotNull);
 

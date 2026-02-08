@@ -1,7 +1,5 @@
-use crate::core::audio_error::AudioError;
-use crate::core::audio_utils::{load_wav_mono_f32, resample_to_16k_mono};
-use crate::core::ncnn_handler::NcnnHandle;
-use crate::core::ncnn_vad::{SpeechSegment, VadHandle};
+use crate::core::audio::{AudioError, NcnnHandle, SpeechSegment, VadHandle};
+use crate::core::audio::{load_wav_mono_f32, resample_to_16k_mono};
 use flutter_rust_bridge::frb;
 use log::{debug, error, info};
 
@@ -15,14 +13,14 @@ fn format_timestamp(seconds: f32) -> String {
 }
 
 #[frb(sync)]
-pub fn initSherpa(modelPath: String) -> Result<(), AudioError> {
+pub fn init_sherpa(model_path: String) -> Result<(), AudioError> {
     info!(
         "🎙️  Starting Sherpa initialization with model: {}",
-        modelPath
+        model_path
     );
     crate::init_logging();
 
-    match NcnnHandle::init(modelPath.clone()) {
+    match NcnnHandle::init(model_path.clone()) {
         Ok(_) => {
             info!("✅ Sherpa initialized successfully");
             Ok(())
@@ -35,10 +33,10 @@ pub fn initSherpa(modelPath: String) -> Result<(), AudioError> {
 }
 
 #[frb(sync)]
-pub fn initVad(vadModelPath: String) -> Result<(), AudioError> {
-    info!("🔧 Starting VAD initialization with model: {}", vadModelPath);
+pub fn init_vad(vad_model_path: String) -> Result<(), AudioError> {
+    info!("🔧 Starting VAD initialization with model: {}", vad_model_path);
     
-    match VadHandle::init(vadModelPath) {
+    match VadHandle::init(vad_model_path) {
         Ok(_) => {
             info!("✅ VAD initialized successfully");
             Ok(())
@@ -51,14 +49,14 @@ pub fn initVad(vadModelPath: String) -> Result<(), AudioError> {
 }
 
 #[frb(dart_async)]
-pub async fn transcribeAudio(path: String, language: Option<String>) -> Result<String, AudioError> {
+pub async fn transcribe_audio(path: String, language: Option<String>) -> Result<String, AudioError> {
     info!("🎵 Loading WAV file: {}", path);
 
     match load_wav_mono_f32(&path) {
         Ok(pcm) => {
             info!("📊 WAV loaded: {} samples", pcm.len());
             debug!("Language: {:?}", language);
-            transcribePcm(pcm, 16_000, language).await
+            transcribe_pcm(pcm, 16_000, language).await
         }
         Err(e) => {
             error!("❌ Failed to load WAV: {}", e);
@@ -68,23 +66,23 @@ pub async fn transcribeAudio(path: String, language: Option<String>) -> Result<S
 }
 
 #[frb(dart_async)]
-pub async fn transcribePcm(
+pub async fn transcribe_pcm(
     pcm: Vec<f32>,
-    sampleRate: u32,
+    sample_rate: u32,
     language: Option<String>,
 ) -> Result<String, AudioError> {
     info!(
         "🔄 Starting VAD-based transcription: {} samples at {} Hz",
         pcm.len(),
-        sampleRate
+        sample_rate
     );
 
-    let pcm_16k = if sampleRate == 16_000 {
+    let pcm_16k = if sample_rate == 16_000 {
         info!("✓ Already 16kHz, skipping resample");
         pcm
     } else {
-        info!("🔧 Resampling from {} Hz to 16 kHz...", sampleRate);
-        match resample_to_16k_mono(&pcm, sampleRate) {
+        info!("🔧 Resampling from {} Hz to 16 kHz...", sample_rate);
+        match resample_to_16k_mono(&pcm, sample_rate) {
             Ok(resampled) => {
                 info!("✓ Resampled: {} -> {} samples", pcm.len(), resampled.len());
                 resampled

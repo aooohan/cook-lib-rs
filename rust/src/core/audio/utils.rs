@@ -1,4 +1,4 @@
-use crate::core::audio_error::AudioError;
+use super::error::AudioError;
 use log::{error, info};
 use rubato::{Resampler, SincFixedIn, SincInterpolationParameters, SincInterpolationType};
 

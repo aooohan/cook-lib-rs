@@ -2,7 +2,7 @@ use scraper::{Html, Selector};
 use serde_json::Value;
 
 use crate::core::xhs::ParserError;
-use crate::models::xhs::{NoteDetail, NoteType, XhsArticle, XhsVideo};
+use crate::api::models::xhs::{NoteDetail, NoteType, XhsArticle, XhsVideo};
 
 pub fn extract_initial_state(html: &str) -> Result<Value, ParserError> {
     let document = Html::parse_document(html);

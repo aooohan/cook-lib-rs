@@ -1,16 +1,23 @@
 /// Cook Lib - Recipe extraction library with ASR and video frame analysis
 library cook_lib;
 
-// Export native decoder (Android video/audio decoding)
+// Native decoder (Android video/audio decoding)
 export 'src/native_decoder.dart';
 
-// Export generated Rust bindings
-export 'src/rust/frb_generated.dart';
-export 'src/rust/api/audio.dart';
-export 'src/rust/api/frame_extractor.dart';
+// FRB initialization (必须暴露，用于初始化)
+export 'src/rust/frb_generated.dart' show RustLib;
+
+// ASR API
+export 'src/rust/api/audio.dart' show initSherpa, initVad, transcribeAudio, transcribePcm;
+
+// Video API
+export 'src/rust/api/video.dart';
+
+// XHS API
 export 'src/rust/api/xhs.dart';
-export 'src/rust/api/simple.dart';
-export 'src/rust/core/audio_error.dart';
-export 'src/rust/models/xhs.dart';
-export 'src/rust/frame_extractor/pipeline.dart';
-export 'src/rust/frame_extractor/state_machine.dart';
+
+// Models
+export 'src/rust/api/models/xhs.dart';
+
+// Audio error
+export 'src/rust/core/audio/error.dart';

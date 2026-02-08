@@ -1,8 +1,8 @@
-use crate::frame_extractor::deduplicator::FrameDeduplicator;
-use crate::frame_extractor::diff_filter::FrameDiffFilter;
-use crate::frame_extractor::frame::{Frame, FrameInfo, RawFrame};
-use crate::frame_extractor::state_machine::{StateAction, StateConfig, StateMachine};
-use crate::frame_extractor::text_detector::TextDetector;
+use super::deduplicator::FrameDeduplicator;
+use super::diff_filter::FrameDiffFilter;
+use super::frame::{Frame, FrameInfo, RawFrame};
+use super::state_machine::{StateAction, StateConfig, StateMachine};
+use super::text_detector::TextDetector;
 
 pub struct ExtractionConfig {
     pub state_config: StateConfig,
@@ -197,7 +197,7 @@ impl Default for FrameExtractor {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::frame_extractor::text_detector::MockTextDetector;
+    use super::text_detector::MockTextDetector;
 
     fn create_test_frame(width: u32, height: u32, fill: u8, frame_number: u64) -> Frame {
         let data = vec![fill; (width * height * 4) as usize];

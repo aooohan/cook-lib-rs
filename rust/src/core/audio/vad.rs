@@ -2,7 +2,7 @@
 //!
 //! Uses the real Silero VAD model for accurate speech detection.
 
-use crate::core::audio_error::AudioError;
+use super::error::AudioError;
 use log::{debug, info};
 use sherpa_ncnn::{Vad, VadConfig};
 use std::sync::Mutex;

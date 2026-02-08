@@ -1,4 +1,4 @@
-use crate::frame_extractor::frame::Frame;
+use super::frame::Frame;
 
 pub struct FrameDiffFilter {
     sample_size: (u32, u32),

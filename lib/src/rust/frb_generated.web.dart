@@ -7,16 +7,16 @@
 // ignore_for_file: argument_type_not_assignable
 
 import 'api/audio.dart';
-import 'api/frame_extractor.dart';
+import 'api/models/xhs.dart';
 import 'api/simple.dart';
+import 'api/video.dart';
 import 'api/xhs.dart';
-import 'core/audio_error.dart';
+import 'core/audio/error.dart';
+import 'core/video/pipeline.dart';
+import 'core/video/state_machine.dart';
 import 'dart:async';
 import 'dart:convert';
-import 'frame_extractor/pipeline.dart';
-import 'frame_extractor/state_machine.dart';
 import 'frb_generated.dart';
-import 'models/xhs.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated_web.dart';
 
 abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {

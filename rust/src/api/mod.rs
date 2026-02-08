@@ -1,4 +1,5 @@
 pub mod audio;
-pub mod frame_extractor;
+pub mod models;
 pub mod simple;
+pub mod video;
 pub mod xhs;

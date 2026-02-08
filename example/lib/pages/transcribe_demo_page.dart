@@ -205,7 +205,7 @@ class _TranscribeDemoPageState extends State<TranscribeDemoPage> {
         _status = '解码视频到WAV...';
       });
       print('Decoding video file: $videoPath');
-      final wavPath = await NativeDecoder.decodeAudioToWav(videoPath);
+      final wavPath = await MediaNativeDecoder.decodeAudioToWav(videoPath);
       print('WAV file created: $wavPath');
 
       setState(() {

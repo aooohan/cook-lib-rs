@@ -4,18 +4,18 @@
 // ignore_for_file: unused_import, unused_element, unnecessary_import, duplicate_ignore, invalid_use_of_internal_member, annotate_overrides, non_constant_identifier_names, curly_braces_in_flow_control_structures, prefer_const_literals_to_create_immutables, unused_field
 
 import 'api/audio.dart';
-import 'api/frame_extractor.dart';
+import 'api/models/xhs.dart';
 import 'api/simple.dart';
+import 'api/video.dart';
 import 'api/xhs.dart';
-import 'core/audio_error.dart';
+import 'core/audio/error.dart';
+import 'core/video/pipeline.dart';
+import 'core/video/state_machine.dart';
 import 'dart:async';
 import 'dart:convert';
-import 'frame_extractor/pipeline.dart';
-import 'frame_extractor/state_machine.dart';
 import 'frb_generated.dart';
 import 'frb_generated.io.dart'
     if (dart.library.js_interop) 'frb_generated.web.dart';
-import 'models/xhs.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
 /// Main entrypoint of the Rust API
@@ -73,7 +73,7 @@ class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
   String get codegenVersion => '2.11.1';
 
   @override
-  int get rustContentHash => 1069598482;
+  int get rustContentHash => -678905927;
 
   static const kDefaultExternalLibraryLoaderConfig =
       ExternalLibraryLoaderConfig(
@@ -84,19 +84,19 @@ class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
 }
 
 abstract class RustLibApi extends BaseApi {
-  ExtractionStats crateApiFrameExtractorFrameExtractorManagerGetStats({
+  ExtractionStats crateApiVideoFrameExtractorManagerGetStats({
     required FrameExtractorManager that,
   });
 
-  FrameExtractorManager crateApiFrameExtractorFrameExtractorManagerNew();
+  FrameExtractorManager crateApiVideoFrameExtractorManagerNew();
 
   Future<List<FrameExtractedInfo>>
-  crateApiFrameExtractorFrameExtractorManagerProcessBatch({
+  crateApiVideoFrameExtractorManagerProcessBatch({
     required FrameExtractorManager that,
     required List<YFrameData> frames,
   });
 
-  FrameExtractedInfo? crateApiFrameExtractorFrameExtractorManagerProcessFrame({
+  FrameExtractedInfo? crateApiVideoFrameExtractorManagerProcessFrame({
     required FrameExtractorManager that,
     required int width,
     required int height,
@@ -105,7 +105,7 @@ abstract class RustLibApi extends BaseApi {
     required BigInt frameNumber,
   });
 
-  FrameExtractedInfo? crateApiFrameExtractorFrameExtractorManagerProcessYFrame({
+  FrameExtractedInfo? crateApiVideoFrameExtractorManagerProcessYFrame({
     required FrameExtractorManager that,
     required int width,
     required int height,
@@ -114,8 +114,7 @@ abstract class RustLibApi extends BaseApi {
     required BigInt frameNumber,
   });
 
-  FrameExtractedInfo?
-  crateApiFrameExtractorFrameExtractorManagerProcessYuvFrame({
+  FrameExtractedInfo? crateApiVideoFrameExtractorManagerProcessYuvFrame({
     required FrameExtractorManager that,
     required int width,
     required int height,
@@ -126,25 +125,24 @@ abstract class RustLibApi extends BaseApi {
     required BigInt frameNumber,
   });
 
-  void crateApiFrameExtractorFrameExtractorManagerReset({
+  void crateApiVideoFrameExtractorManagerReset({
     required FrameExtractorManager that,
   });
 
-  FrameExtractorManager
-  crateApiFrameExtractorFrameExtractorManagerWithMockDetector({
+  FrameExtractorManager crateApiVideoFrameExtractorManagerWithMockDetector({
     required Uint64List textFrames,
   });
 
-  ExtractionConfig crateApiFrameExtractorCreateHighMotionConfig();
+  ExtractionConfig crateApiVideoCreateHighMotionConfig();
 
-  ExtractionConfig crateApiFrameExtractorCreateLowMotionConfig();
+  ExtractionConfig crateApiVideoCreateLowMotionConfig();
 
-  Future<List<CroppedFrame>> crateApiFrameExtractorCropAndResizeBatch({
+  Future<List<CroppedFrame>> crateApiVideoCropAndResizeBatch({
     required List<YuvFrameData> frames,
     required FrameCropConfig config,
   });
 
-  CroppedFrame crateApiFrameExtractorCropAndResizeFrame({
+  CroppedFrame crateApiVideoCropAndResizeFrame({
     required List<int> yPlane,
     required List<int> uPlane,
     required List<int> vPlane,
@@ -154,7 +152,7 @@ abstract class RustLibApi extends BaseApi {
     required BigInt frameNumber,
   });
 
-  CroppedFrame crateApiFrameExtractorCropAndResizeFrameWithConfig({
+  CroppedFrame crateApiVideoCropAndResizeFrameWithConfig({
     required List<int> yPlane,
     required List<int> uPlane,
     required List<int> vPlane,
@@ -165,15 +163,17 @@ abstract class RustLibApi extends BaseApi {
     required FrameCropConfig config,
   });
 
-  Future<FrameCropConfig> crateApiFrameExtractorFrameCropConfigDefault();
+  Future<FrameCropConfig> crateApiVideoFrameCropConfigDefault();
 
   String crateApiSimpleGreet({required String name});
+
+  Future<void> crateApiSimpleInitApp();
 
   void crateApiAudioInitSherpa({required String modelPath});
 
   void crateApiAudioInitVad({required String vadModelPath});
 
-  Future<void> crateApiSimpleInitApp();
+  Future<NoteType> crateApiModelsXhsNoteTypeDefault();
 
   XhsArticle crateApiXhsParseXhsFromText({required String text});
 
@@ -217,7 +217,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   });
 
   @override
-  ExtractionStats crateApiFrameExtractorFrameExtractorManagerGetStats({
+  ExtractionStats crateApiVideoFrameExtractorManagerGetStats({
     required FrameExtractorManager that,
   }) {
     return handler.executeSync(
@@ -234,23 +234,21 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           decodeSuccessData: sse_decode_extraction_stats,
           decodeErrorData: null,
         ),
-        constMeta:
-            kCrateApiFrameExtractorFrameExtractorManagerGetStatsConstMeta,
+        constMeta: kCrateApiVideoFrameExtractorManagerGetStatsConstMeta,
         argValues: [that],
         apiImpl: this,
       ),
     );
   }
 
-  TaskConstMeta
-  get kCrateApiFrameExtractorFrameExtractorManagerGetStatsConstMeta =>
+  TaskConstMeta get kCrateApiVideoFrameExtractorManagerGetStatsConstMeta =>
       const TaskConstMeta(
         debugName: "FrameExtractorManager_get_stats",
         argNames: ["that"],
       );
 
   @override
-  FrameExtractorManager crateApiFrameExtractorFrameExtractorManagerNew() {
+  FrameExtractorManager crateApiVideoFrameExtractorManagerNew() {
     return handler.executeSync(
       SyncTask(
         callFfi: () {
@@ -262,19 +260,19 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
               sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFrameExtractorManager,
           decodeErrorData: null,
         ),
-        constMeta: kCrateApiFrameExtractorFrameExtractorManagerNewConstMeta,
+        constMeta: kCrateApiVideoFrameExtractorManagerNewConstMeta,
         argValues: [],
         apiImpl: this,
       ),
     );
   }
 
-  TaskConstMeta get kCrateApiFrameExtractorFrameExtractorManagerNewConstMeta =>
+  TaskConstMeta get kCrateApiVideoFrameExtractorManagerNewConstMeta =>
       const TaskConstMeta(debugName: "FrameExtractorManager_new", argNames: []);
 
   @override
   Future<List<FrameExtractedInfo>>
-  crateApiFrameExtractorFrameExtractorManagerProcessBatch({
+  crateApiVideoFrameExtractorManagerProcessBatch({
     required FrameExtractorManager that,
     required List<YFrameData> frames,
   }) {
@@ -298,23 +296,21 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           decodeSuccessData: sse_decode_list_frame_extracted_info,
           decodeErrorData: null,
         ),
-        constMeta:
-            kCrateApiFrameExtractorFrameExtractorManagerProcessBatchConstMeta,
+        constMeta: kCrateApiVideoFrameExtractorManagerProcessBatchConstMeta,
         argValues: [that, frames],
         apiImpl: this,
       ),
     );
   }
 
-  TaskConstMeta
-  get kCrateApiFrameExtractorFrameExtractorManagerProcessBatchConstMeta =>
+  TaskConstMeta get kCrateApiVideoFrameExtractorManagerProcessBatchConstMeta =>
       const TaskConstMeta(
         debugName: "FrameExtractorManager_process_batch",
         argNames: ["that", "frames"],
       );
 
   @override
-  FrameExtractedInfo? crateApiFrameExtractorFrameExtractorManagerProcessFrame({
+  FrameExtractedInfo? crateApiVideoFrameExtractorManagerProcessFrame({
     required FrameExtractorManager that,
     required int width,
     required int height,
@@ -341,16 +337,14 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           decodeSuccessData: sse_decode_opt_box_autoadd_frame_extracted_info,
           decodeErrorData: null,
         ),
-        constMeta:
-            kCrateApiFrameExtractorFrameExtractorManagerProcessFrameConstMeta,
+        constMeta: kCrateApiVideoFrameExtractorManagerProcessFrameConstMeta,
         argValues: [that, width, height, rgbaData, timestampMs, frameNumber],
         apiImpl: this,
       ),
     );
   }
 
-  TaskConstMeta
-  get kCrateApiFrameExtractorFrameExtractorManagerProcessFrameConstMeta =>
+  TaskConstMeta get kCrateApiVideoFrameExtractorManagerProcessFrameConstMeta =>
       const TaskConstMeta(
         debugName: "FrameExtractorManager_process_frame",
         argNames: [
@@ -364,7 +358,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       );
 
   @override
-  FrameExtractedInfo? crateApiFrameExtractorFrameExtractorManagerProcessYFrame({
+  FrameExtractedInfo? crateApiVideoFrameExtractorManagerProcessYFrame({
     required FrameExtractorManager that,
     required int width,
     required int height,
@@ -391,16 +385,14 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           decodeSuccessData: sse_decode_opt_box_autoadd_frame_extracted_info,
           decodeErrorData: null,
         ),
-        constMeta:
-            kCrateApiFrameExtractorFrameExtractorManagerProcessYFrameConstMeta,
+        constMeta: kCrateApiVideoFrameExtractorManagerProcessYFrameConstMeta,
         argValues: [that, width, height, yPlane, timestampMs, frameNumber],
         apiImpl: this,
       ),
     );
   }
 
-  TaskConstMeta
-  get kCrateApiFrameExtractorFrameExtractorManagerProcessYFrameConstMeta =>
+  TaskConstMeta get kCrateApiVideoFrameExtractorManagerProcessYFrameConstMeta =>
       const TaskConstMeta(
         debugName: "FrameExtractorManager_process_y_frame",
         argNames: [
@@ -414,8 +406,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       );
 
   @override
-  FrameExtractedInfo?
-  crateApiFrameExtractorFrameExtractorManagerProcessYuvFrame({
+  FrameExtractedInfo? crateApiVideoFrameExtractorManagerProcessYuvFrame({
     required FrameExtractorManager that,
     required int width,
     required int height,
@@ -446,8 +437,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           decodeSuccessData: sse_decode_opt_box_autoadd_frame_extracted_info,
           decodeErrorData: null,
         ),
-        constMeta:
-            kCrateApiFrameExtractorFrameExtractorManagerProcessYuvFrameConstMeta,
+        constMeta: kCrateApiVideoFrameExtractorManagerProcessYuvFrameConstMeta,
         argValues: [
           that,
           width,
@@ -464,7 +454,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   TaskConstMeta
-  get kCrateApiFrameExtractorFrameExtractorManagerProcessYuvFrameConstMeta =>
+  get kCrateApiVideoFrameExtractorManagerProcessYuvFrameConstMeta =>
       const TaskConstMeta(
         debugName: "FrameExtractorManager_process_yuv_frame",
         argNames: [
@@ -480,7 +470,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       );
 
   @override
-  void crateApiFrameExtractorFrameExtractorManagerReset({
+  void crateApiVideoFrameExtractorManagerReset({
     required FrameExtractorManager that,
   }) {
     return handler.executeSync(
@@ -497,23 +487,21 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           decodeSuccessData: sse_decode_unit,
           decodeErrorData: null,
         ),
-        constMeta: kCrateApiFrameExtractorFrameExtractorManagerResetConstMeta,
+        constMeta: kCrateApiVideoFrameExtractorManagerResetConstMeta,
         argValues: [that],
         apiImpl: this,
       ),
     );
   }
 
-  TaskConstMeta
-  get kCrateApiFrameExtractorFrameExtractorManagerResetConstMeta =>
+  TaskConstMeta get kCrateApiVideoFrameExtractorManagerResetConstMeta =>
       const TaskConstMeta(
         debugName: "FrameExtractorManager_reset",
         argNames: ["that"],
       );
 
   @override
-  FrameExtractorManager
-  crateApiFrameExtractorFrameExtractorManagerWithMockDetector({
+  FrameExtractorManager crateApiVideoFrameExtractorManagerWithMockDetector({
     required Uint64List textFrames,
   }) {
     return handler.executeSync(
@@ -528,8 +516,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
               sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFrameExtractorManager,
           decodeErrorData: null,
         ),
-        constMeta:
-            kCrateApiFrameExtractorFrameExtractorManagerWithMockDetectorConstMeta,
+        constMeta: kCrateApiVideoFrameExtractorManagerWithMockDetectorConstMeta,
         argValues: [textFrames],
         apiImpl: this,
       ),
@@ -537,14 +524,14 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   TaskConstMeta
-  get kCrateApiFrameExtractorFrameExtractorManagerWithMockDetectorConstMeta =>
+  get kCrateApiVideoFrameExtractorManagerWithMockDetectorConstMeta =>
       const TaskConstMeta(
         debugName: "FrameExtractorManager_with_mock_detector",
         argNames: ["textFrames"],
       );
 
   @override
-  ExtractionConfig crateApiFrameExtractorCreateHighMotionConfig() {
+  ExtractionConfig crateApiVideoCreateHighMotionConfig() {
     return handler.executeSync(
       SyncTask(
         callFfi: () {
@@ -555,18 +542,18 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           decodeSuccessData: sse_decode_extraction_config,
           decodeErrorData: null,
         ),
-        constMeta: kCrateApiFrameExtractorCreateHighMotionConfigConstMeta,
+        constMeta: kCrateApiVideoCreateHighMotionConfigConstMeta,
         argValues: [],
         apiImpl: this,
       ),
     );
   }
 
-  TaskConstMeta get kCrateApiFrameExtractorCreateHighMotionConfigConstMeta =>
+  TaskConstMeta get kCrateApiVideoCreateHighMotionConfigConstMeta =>
       const TaskConstMeta(debugName: "create_high_motion_config", argNames: []);
 
   @override
-  ExtractionConfig crateApiFrameExtractorCreateLowMotionConfig() {
+  ExtractionConfig crateApiVideoCreateLowMotionConfig() {
     return handler.executeSync(
       SyncTask(
         callFfi: () {
@@ -577,18 +564,18 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           decodeSuccessData: sse_decode_extraction_config,
           decodeErrorData: null,
         ),
-        constMeta: kCrateApiFrameExtractorCreateLowMotionConfigConstMeta,
+        constMeta: kCrateApiVideoCreateLowMotionConfigConstMeta,
         argValues: [],
         apiImpl: this,
       ),
     );
   }
 
-  TaskConstMeta get kCrateApiFrameExtractorCreateLowMotionConfigConstMeta =>
+  TaskConstMeta get kCrateApiVideoCreateLowMotionConfigConstMeta =>
       const TaskConstMeta(debugName: "create_low_motion_config", argNames: []);
 
   @override
-  Future<List<CroppedFrame>> crateApiFrameExtractorCropAndResizeBatch({
+  Future<List<CroppedFrame>> crateApiVideoCropAndResizeBatch({
     required List<YuvFrameData> frames,
     required FrameCropConfig config,
   }) {
@@ -609,21 +596,21 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           decodeSuccessData: sse_decode_list_cropped_frame,
           decodeErrorData: null,
         ),
-        constMeta: kCrateApiFrameExtractorCropAndResizeBatchConstMeta,
+        constMeta: kCrateApiVideoCropAndResizeBatchConstMeta,
         argValues: [frames, config],
         apiImpl: this,
       ),
     );
   }
 
-  TaskConstMeta get kCrateApiFrameExtractorCropAndResizeBatchConstMeta =>
+  TaskConstMeta get kCrateApiVideoCropAndResizeBatchConstMeta =>
       const TaskConstMeta(
         debugName: "crop_and_resize_batch",
         argNames: ["frames", "config"],
       );
 
   @override
-  CroppedFrame crateApiFrameExtractorCropAndResizeFrame({
+  CroppedFrame crateApiVideoCropAndResizeFrame({
     required List<int> yPlane,
     required List<int> uPlane,
     required List<int> vPlane,
@@ -649,7 +636,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           decodeSuccessData: sse_decode_cropped_frame,
           decodeErrorData: null,
         ),
-        constMeta: kCrateApiFrameExtractorCropAndResizeFrameConstMeta,
+        constMeta: kCrateApiVideoCropAndResizeFrameConstMeta,
         argValues: [
           yPlane,
           uPlane,
@@ -664,7 +651,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     );
   }
 
-  TaskConstMeta get kCrateApiFrameExtractorCropAndResizeFrameConstMeta =>
+  TaskConstMeta get kCrateApiVideoCropAndResizeFrameConstMeta =>
       const TaskConstMeta(
         debugName: "crop_and_resize_frame",
         argNames: [
@@ -679,7 +666,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       );
 
   @override
-  CroppedFrame crateApiFrameExtractorCropAndResizeFrameWithConfig({
+  CroppedFrame crateApiVideoCropAndResizeFrameWithConfig({
     required List<int> yPlane,
     required List<int> uPlane,
     required List<int> vPlane,
@@ -707,7 +694,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           decodeSuccessData: sse_decode_cropped_frame,
           decodeErrorData: null,
         ),
-        constMeta: kCrateApiFrameExtractorCropAndResizeFrameWithConfigConstMeta,
+        constMeta: kCrateApiVideoCropAndResizeFrameWithConfigConstMeta,
         argValues: [
           yPlane,
           uPlane,
@@ -723,8 +710,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     );
   }
 
-  TaskConstMeta
-  get kCrateApiFrameExtractorCropAndResizeFrameWithConfigConstMeta =>
+  TaskConstMeta get kCrateApiVideoCropAndResizeFrameWithConfigConstMeta =>
       const TaskConstMeta(
         debugName: "crop_and_resize_frame_with_config",
         argNames: [
@@ -740,7 +726,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       );
 
   @override
-  Future<FrameCropConfig> crateApiFrameExtractorFrameCropConfigDefault() {
+  Future<FrameCropConfig> crateApiVideoFrameCropConfigDefault() {
     return handler.executeNormal(
       NormalTask(
         callFfi: (port_) {
@@ -756,14 +742,14 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           decodeSuccessData: sse_decode_frame_crop_config,
           decodeErrorData: null,
         ),
-        constMeta: kCrateApiFrameExtractorFrameCropConfigDefaultConstMeta,
+        constMeta: kCrateApiVideoFrameCropConfigDefaultConstMeta,
         argValues: [],
         apiImpl: this,
       ),
     );
   }
 
-  TaskConstMeta get kCrateApiFrameExtractorFrameCropConfigDefaultConstMeta =>
+  TaskConstMeta get kCrateApiVideoFrameCropConfigDefaultConstMeta =>
       const TaskConstMeta(debugName: "frame_crop_config_default", argNames: []);
 
   @override
@@ -790,54 +776,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       const TaskConstMeta(debugName: "greet", argNames: ["name"]);
 
   @override
-  void crateApiAudioInitSherpa({required String modelPath}) {
-    return handler.executeSync(
-      SyncTask(
-        callFfi: () {
-          final serializer = SseSerializer(generalizedFrbRustBinding);
-          sse_encode_String(modelPath, serializer);
-          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 16)!;
-        },
-        codec: SseCodec(
-          decodeSuccessData: sse_decode_unit,
-          decodeErrorData:
-              sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerAudioError,
-        ),
-        constMeta: kCrateApiAudioInitSherpaConstMeta,
-        argValues: [modelPath],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta get kCrateApiAudioInitSherpaConstMeta =>
-      const TaskConstMeta(debugName: "initSherpa", argNames: ["modelPath"]);
-
-  @override
-  void crateApiAudioInitVad({required String vadModelPath}) {
-    return handler.executeSync(
-      SyncTask(
-        callFfi: () {
-          final serializer = SseSerializer(generalizedFrbRustBinding);
-          sse_encode_String(vadModelPath, serializer);
-          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 17)!;
-        },
-        codec: SseCodec(
-          decodeSuccessData: sse_decode_unit,
-          decodeErrorData:
-              sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerAudioError,
-        ),
-        constMeta: kCrateApiAudioInitVadConstMeta,
-        argValues: [vadModelPath],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta get kCrateApiAudioInitVadConstMeta =>
-      const TaskConstMeta(debugName: "initVad", argNames: ["vadModelPath"]);
-
-  @override
   Future<void> crateApiSimpleInitApp() {
     return handler.executeNormal(
       NormalTask(
@@ -846,7 +784,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 18,
+            funcId: 16,
             port: port_,
           );
         },
@@ -865,13 +803,88 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       const TaskConstMeta(debugName: "init_app", argNames: []);
 
   @override
+  void crateApiAudioInitSherpa({required String modelPath}) {
+    return handler.executeSync(
+      SyncTask(
+        callFfi: () {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_String(modelPath, serializer);
+          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 17)!;
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_unit,
+          decodeErrorData:
+              sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerAudioError,
+        ),
+        constMeta: kCrateApiAudioInitSherpaConstMeta,
+        argValues: [modelPath],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiAudioInitSherpaConstMeta =>
+      const TaskConstMeta(debugName: "init_sherpa", argNames: ["modelPath"]);
+
+  @override
+  void crateApiAudioInitVad({required String vadModelPath}) {
+    return handler.executeSync(
+      SyncTask(
+        callFfi: () {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_String(vadModelPath, serializer);
+          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 18)!;
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_unit,
+          decodeErrorData:
+              sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerAudioError,
+        ),
+        constMeta: kCrateApiAudioInitVadConstMeta,
+        argValues: [vadModelPath],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiAudioInitVadConstMeta =>
+      const TaskConstMeta(debugName: "init_vad", argNames: ["vadModelPath"]);
+
+  @override
+  Future<NoteType> crateApiModelsXhsNoteTypeDefault() {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 19,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_note_type,
+          decodeErrorData: null,
+        ),
+        constMeta: kCrateApiModelsXhsNoteTypeDefaultConstMeta,
+        argValues: [],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiModelsXhsNoteTypeDefaultConstMeta =>
+      const TaskConstMeta(debugName: "note_type_default", argNames: []);
+
+  @override
   XhsArticle crateApiXhsParseXhsFromText({required String text}) {
     return handler.executeSync(
       SyncTask(
         callFfi: () {
           final serializer = SseSerializer(generalizedFrbRustBinding);
           sse_encode_String(text, serializer);
-          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 19)!;
+          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 20)!;
         },
         codec: SseCodec(
           decodeSuccessData: sse_decode_xhs_article,
@@ -894,7 +907,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         callFfi: () {
           final serializer = SseSerializer(generalizedFrbRustBinding);
           sse_encode_String(url, serializer);
-          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 20)!;
+          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 21)!;
         },
         codec: SseCodec(
           decodeSuccessData: sse_decode_xhs_article,
@@ -924,7 +937,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 21,
+            funcId: 22,
             port: port_,
           );
         },
@@ -942,7 +955,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   TaskConstMeta get kCrateApiAudioTranscribeAudioConstMeta =>
       const TaskConstMeta(
-        debugName: "transcribeAudio",
+        debugName: "transcribe_audio",
         argNames: ["path", "language"],
       );
 
@@ -962,7 +975,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 22,
+            funcId: 23,
             port: port_,
           );
         },
@@ -979,7 +992,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   TaskConstMeta get kCrateApiAudioTranscribePcmConstMeta => const TaskConstMeta(
-    debugName: "transcribePcm",
+    debugName: "transcribe_pcm",
     argNames: ["pcm", "sampleRate", "language"],
   );
 
@@ -2314,17 +2327,16 @@ class FrameExtractorManagerImpl extends RustOpaque
   );
 
   ExtractionStats getStats() => RustLib.instance.api
-      .crateApiFrameExtractorFrameExtractorManagerGetStats(that: this);
+      .crateApiVideoFrameExtractorManagerGetStats(that: this);
 
   /// 异步批量处理 - 智能文字状态去重
   /// 策略：先裁剪缩放，再判断"有没有文字"，再判断"文字变没变"
   Future<List<FrameExtractedInfo>> processBatch({
     required List<YFrameData> frames,
-  }) => RustLib.instance.api
-      .crateApiFrameExtractorFrameExtractorManagerProcessBatch(
-        that: this,
-        frames: frames,
-      );
+  }) => RustLib.instance.api.crateApiVideoFrameExtractorManagerProcessBatch(
+    that: this,
+    frames: frames,
+  );
 
   FrameExtractedInfo? processFrame({
     required int width,
@@ -2332,15 +2344,14 @@ class FrameExtractorManagerImpl extends RustOpaque
     required List<int> rgbaData,
     required BigInt timestampMs,
     required BigInt frameNumber,
-  }) => RustLib.instance.api
-      .crateApiFrameExtractorFrameExtractorManagerProcessFrame(
-        that: this,
-        width: width,
-        height: height,
-        rgbaData: rgbaData,
-        timestampMs: timestampMs,
-        frameNumber: frameNumber,
-      );
+  }) => RustLib.instance.api.crateApiVideoFrameExtractorManagerProcessFrame(
+    that: this,
+    width: width,
+    height: height,
+    rgbaData: rgbaData,
+    timestampMs: timestampMs,
+    frameNumber: frameNumber,
+  );
 
   FrameExtractedInfo? processYFrame({
     required int width,
@@ -2348,15 +2359,14 @@ class FrameExtractorManagerImpl extends RustOpaque
     required List<int> yPlane,
     required BigInt timestampMs,
     required BigInt frameNumber,
-  }) => RustLib.instance.api
-      .crateApiFrameExtractorFrameExtractorManagerProcessYFrame(
-        that: this,
-        width: width,
-        height: height,
-        yPlane: yPlane,
-        timestampMs: timestampMs,
-        frameNumber: frameNumber,
-      );
+  }) => RustLib.instance.api.crateApiVideoFrameExtractorManagerProcessYFrame(
+    that: this,
+    width: width,
+    height: height,
+    yPlane: yPlane,
+    timestampMs: timestampMs,
+    frameNumber: frameNumber,
+  );
 
   FrameExtractedInfo? processYuvFrame({
     required int width,
@@ -2366,18 +2376,17 @@ class FrameExtractorManagerImpl extends RustOpaque
     required List<int> vPlane,
     required BigInt timestampMs,
     required BigInt frameNumber,
-  }) => RustLib.instance.api
-      .crateApiFrameExtractorFrameExtractorManagerProcessYuvFrame(
-        that: this,
-        width: width,
-        height: height,
-        yPlane: yPlane,
-        uPlane: uPlane,
-        vPlane: vPlane,
-        timestampMs: timestampMs,
-        frameNumber: frameNumber,
-      );
+  }) => RustLib.instance.api.crateApiVideoFrameExtractorManagerProcessYuvFrame(
+    that: this,
+    width: width,
+    height: height,
+    yPlane: yPlane,
+    uPlane: uPlane,
+    vPlane: vPlane,
+    timestampMs: timestampMs,
+    frameNumber: frameNumber,
+  );
 
-  void reset() => RustLib.instance.api
-      .crateApiFrameExtractorFrameExtractorManagerReset(that: this);
+  void reset() =>
+      RustLib.instance.api.crateApiVideoFrameExtractorManagerReset(that: this);
 }

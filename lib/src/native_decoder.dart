@@ -1,9 +1,8 @@
 import 'dart:async';
-import 'dart:typed_data';
 import 'package:flutter/services.dart';
 
 /// Native video/audio decoder for Android
-class NativeDecoder {
+class MediaNativeDecoder {
   static const MethodChannel _methodChannel = MethodChannel('cook_lib/methods');
   static const EventChannel _eventChannel = EventChannel('cook_lib/video_frames');
 

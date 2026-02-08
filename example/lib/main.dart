@@ -113,7 +113,7 @@ class _SimpleTestPageState extends State<SimpleTestPage> {
   Future<void> _testAudioDecode() async {
     setState(() => _status = 'Decoding audio...');
     try {
-      final wavPath = await NativeDecoder.decodeAudioToWav(
+      final wavPath = await MediaNativeDecoder.decodeAudioToWav(
         '/data/local/tmp/lmth-cook.mp4',
       );
       setState(() => _status = 'Audio decoded: $wavPath');
@@ -126,7 +126,7 @@ class _SimpleTestPageState extends State<SimpleTestPage> {
     setState(() => _status = 'Extracting frames...');
     int frameCount = 0;
     try {
-      await for (final event in NativeDecoder.extractVideoFrames(
+      await for (final event in MediaNativeDecoder.extractVideoFrames(
         '/data/local/tmp/lmth-cook.mp4',
       )) {
         if (event.isFrame) {

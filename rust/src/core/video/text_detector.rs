@@ -1,4 +1,4 @@
-use crate::frame_extractor::frame::Frame;
+use super::frame::Frame;
 
 #[derive(Debug, Clone)]
 pub struct TextDetectionResult {

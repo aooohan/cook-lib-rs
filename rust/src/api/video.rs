@@ -1,7 +1,7 @@
-use crate::frame_extractor::deduplicator::FrameDeduplicator;
-use crate::frame_extractor::frame::{Frame, RawFrame};
-use crate::frame_extractor::pipeline::{ExtractionConfig, FrameExtractor};
-use crate::frame_extractor::text_detector::{
+use crate::core::video::deduplicator::FrameDeduplicator;
+use crate::core::video::frame::{Frame, RawFrame};
+use crate::core::video::pipeline::{ExtractionConfig, FrameExtractor};
+use crate::core::video::text_detector::{
     CookingTextDetector, MockTextDetector, TextDetector,
 };
 use image::{GrayImage, ImageOutputFormat};

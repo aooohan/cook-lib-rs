@@ -17,21 +17,30 @@ cook_lib/
 │   ├── build.rs
 │   └── src/
 │       ├── lib.rs                  # 入口，模块声明
-│       ├── frb_generated.rs        # flutter_rust_bridge 生成
+│       ├── frb_generated.rs        # flutter_rust_bridge 生成（自动）
 │       ├── api/                    # 公开 API（暴露给 Dart）
 │       │   ├── audio.rs            # ASR/VAD 接口
-│       │   ├── frame_extractor.rs  # 视频抽帧接口
-│       │   ├── xhs.rs              # 小红书解析
-│       │   └── simple.rs           # 简单测试接口
-│       ├── core/                   # 核心实现
-│       │   ├── ncnn_handler.rs     # ASR 处理器
-│       │   ├── ncnn_vad.rs         # VAD 处理器
-│       │   └── audio_error.rs      # 错误类型
-│       ├── frame_extractor/        # 视频帧处理
-│       │   ├── pipeline.rs
-│       │   ├── deduplicator.rs
-│       │   └── ...
-│       └── models/                 # 数据模型
+│       │   ├── video.rs            # 视频抽帧接口
+│       │   ├── xhs.rs              # 小红书解析接口
+│       │   ├── simple.rs           # 简单测试接口
+│       │   └── models/             # 公开数据模型（DTO）
+│       │       └── xhs.rs          # XhsArticle, XhsVideo 等
+│       └── core/                   # 核心实现（内部，不对外暴露）
+│           ├── audio/              # 音频处理
+│           │   ├── error.rs        # AudioError
+│           │   ├── handler.rs      # NcnnHandle (ASR)
+│           │   ├── utils.rs        # 音频工具函数
+│           │   └── vad.rs          # VadHandle (VAD)
+│           ├── video/              # 视频处理
+│           │   ├── deduplicator.rs # 帧去重
+│           │   ├── diff_filter.rs  # 帧差异过滤
+│           │   ├── frame.rs        # 帧数据结构
+│           │   ├── pipeline.rs     # 抽帧管线
+│           │   ├── state_machine.rs# 状态机
+│           │   └── text_detector.rs# 文字检测
+│           └── xhs/                # 小红书解析
+│               ├── mod.rs          # XhsParser
+│               └── parser.rs       # HTML 解析逻辑
 ├── lib/                            # Dart 代码
 │   ├── cook_lib.dart               # 主入口，导出所有 API
 │   ├── src/native_decoder.dart     # 原生解码器 API
@@ -90,22 +99,44 @@ sherpa-ncnn = { git = "https://github.com/aooohan/sherpa-ncnn-rs", default-featu
 
 ## 构建命令
 
-### 本地开发
+项目使用 `just` 作为构建工具，需要先安装：`cargo install just`
 
 ```bash
-# Rust 检查
-cd rust && cargo check
+# 查看所有可用命令
+just --list
 
-# Android 构建（需要 NDK）
-cd rust
-cargo ndk -o ../android/src/main/jniLibs -t arm64-v8a build --release
+# ===== 本地开发 =====
 
-# iOS 构建
-cd rust
-cargo build --release --target aarch64-apple-ios
+# Rust 检查/格式化/lint
+just check                      # cargo check
+just fmt                        # cargo fmt
+just clippy                     # cargo clippy
 
-# 重新生成 Dart 绑定
-flutter_rust_bridge_codegen generate
+# 生成 Dart 绑定（修改 Rust API 后必须执行）
+just generate-bindings
+
+# ===== Android 构建 =====
+
+just build-android arm64-v8a    # 构建单个架构
+just build-android-all          # 构建所有 4 个架构
+
+# ===== iOS 构建 =====
+
+just build-ios                  # 构建所有 iOS target
+just package-ios                # 创建 XCFramework
+just build-ios-all              # 构建 + 打包
+
+# ===== 完整构建 =====
+
+just build-all                  # Android + iOS + bindings
+just build-mobile               # 仅 Android + iOS（用于 CI）
+
+# ===== 清理 =====
+
+just clean                      # 清理所有构建产物
+just clean-rust                 # 仅清理 Rust target
+just clean-android              # 仅清理 jniLibs
+just clean-ios                  # 仅清理 Frameworks
 ```
 
 ### CI 发布

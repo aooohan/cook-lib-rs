@@ -1,7 +1,7 @@
 use reqwest::blocking::Client;
 use thiserror::Error;
 
-use crate::models::xhs::XhsArticle;
+use crate::api::models::xhs::XhsArticle;
 
 mod parser;
 
@@ -195,7 +195,7 @@ mod tests {
         assert_eq!(article.images.len(), 13);
         assert!(article.video.is_none());
 
-        assert_eq!(article.note_type, crate::models::xhs::NoteType::Images);
+        assert_eq!(article.note_type, crate::api::models::xhs::NoteType::Images);
     }
 
     #[test]
@@ -204,7 +204,7 @@ mod tests {
         let parser = XhsParser::new();
         let article = parser.parse_from_html(&html).expect("解析失败");
 
-        assert_eq!(article.note_type, crate::models::xhs::NoteType::Video);
+        assert_eq!(article.note_type, crate::api::models::xhs::NoteType::Video);
     }
 
     #[test]
@@ -213,6 +213,6 @@ mod tests {
         let parser = XhsParser::new();
         let article = parser.parse_from_html(&html).expect("解析失败");
 
-        assert_eq!(article.note_type, crate::models::xhs::NoteType::Images);
+        assert_eq!(article.note_type, crate::api::models::xhs::NoteType::Images);
     }
 }

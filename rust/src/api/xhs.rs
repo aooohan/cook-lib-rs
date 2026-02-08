@@ -1,4 +1,4 @@
-use crate::models::xhs::XhsArticle;
+use crate::api::models::xhs::XhsArticle;
 use regex::Regex;
 use serde::{Deserialize, Serialize};
 

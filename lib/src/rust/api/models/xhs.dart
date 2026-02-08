@@ -3,8 +3,11 @@
 
 // ignore_for_file: invalid_use_of_internal_member, unused_import, unnecessary_import
 
-import '../frb_generated.dart';
+import '../../frb_generated.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
+
+// These types are ignored because they are neither used by any `pub` functions nor (for structs and enums) marked `#[frb(unignore)]`: `ImageItem`, `NoteDetail`
+// These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `assert_receiver_is_total_eq`, `clone`, `clone`, `clone`, `clone`, `eq`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`
 
 /// 笔记类型枚举
 enum NoteType {
@@ -18,7 +21,10 @@ enum NoteType {
   mixed,
 
   /// 纯文本笔记
-  text,
+  text;
+
+  static Future<NoteType> default_() =>
+      RustLib.instance.api.crateApiModelsXhsNoteTypeDefault();
 }
 
 class XhsArticle {

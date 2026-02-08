@@ -1,5 +1,5 @@
-use crate::frame_extractor::frame::Frame;
-use crate::frame_extractor::text_detector::CookingTextDetector;
+use super::frame::Frame;
+use super::text_detector::CookingTextDetector;
 use std::collections::VecDeque;
 
 /// 区域感知去重器 - 针对做菜视频优化

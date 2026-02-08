@@ -1,8 +1,6 @@
 pub mod api;
 pub mod core;
 mod frb_generated;
-pub mod models;
-pub mod frame_extractor;
 
 pub fn init_logging() {
     #[cfg(target_os = "android")]

@@ -1,6 +1,6 @@
 //! Sherpa-NCNN ASR handler
 
-use crate::core::audio_error::AudioError;
+use super::error::AudioError;
 use log::{debug, error, info};
 use once_cell::sync::OnceCell;
 use sherpa_ncnn::{Recognizer, RecognizerConfig};

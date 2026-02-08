@@ -4,17 +4,17 @@
 // ignore_for_file: unused_import, unused_element, unnecessary_import, duplicate_ignore, invalid_use_of_internal_member, annotate_overrides, non_constant_identifier_names, curly_braces_in_flow_control_structures, prefer_const_literals_to_create_immutables, unused_field
 
 import 'api/audio.dart';
-import 'api/frame_extractor.dart';
+import 'api/models/xhs.dart';
 import 'api/simple.dart';
+import 'api/video.dart';
 import 'api/xhs.dart';
-import 'core/audio_error.dart';
+import 'core/audio/error.dart';
+import 'core/video/pipeline.dart';
+import 'core/video/state_machine.dart';
 import 'dart:async';
 import 'dart:convert';
 import 'dart:ffi' as ffi;
-import 'frame_extractor/pipeline.dart';
-import 'frame_extractor/state_machine.dart';
 import 'frb_generated.dart';
-import 'models/xhs.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated_io.dart';
 
 abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {

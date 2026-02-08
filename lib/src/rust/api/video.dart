@@ -3,8 +3,8 @@
 
 // ignore_for_file: invalid_use_of_internal_member, unused_import, unnecessary_import
 
-import '../frame_extractor/pipeline.dart';
-import '../frame_extractor/state_machine.dart';
+import '../core/video/pipeline.dart';
+import '../core/video/state_machine.dart';
 import '../frb_generated.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
@@ -13,10 +13,10 @@ import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 // These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`
 
 ExtractionConfig createHighMotionConfig() =>
-    RustLib.instance.api.crateApiFrameExtractorCreateHighMotionConfig();
+    RustLib.instance.api.crateApiVideoCreateHighMotionConfig();
 
 ExtractionConfig createLowMotionConfig() =>
-    RustLib.instance.api.crateApiFrameExtractorCreateLowMotionConfig();
+    RustLib.instance.api.crateApiVideoCreateLowMotionConfig();
 
 /// 裁剪并缩放 YUV 帧（用于多模态模型输入）
 ///
@@ -33,7 +33,7 @@ CroppedFrame cropAndResizeFrame({
   required int height,
   required BigInt timestampMs,
   required BigInt frameNumber,
-}) => RustLib.instance.api.crateApiFrameExtractorCropAndResizeFrame(
+}) => RustLib.instance.api.crateApiVideoCropAndResizeFrame(
   yPlane: yPlane,
   uPlane: uPlane,
   vPlane: vPlane,
@@ -53,7 +53,7 @@ CroppedFrame cropAndResizeFrameWithConfig({
   required BigInt timestampMs,
   required BigInt frameNumber,
   required FrameCropConfig config,
-}) => RustLib.instance.api.crateApiFrameExtractorCropAndResizeFrameWithConfig(
+}) => RustLib.instance.api.crateApiVideoCropAndResizeFrameWithConfig(
   yPlane: yPlane,
   uPlane: uPlane,
   vPlane: vPlane,
@@ -68,7 +68,7 @@ CroppedFrame cropAndResizeFrameWithConfig({
 Future<List<CroppedFrame>> cropAndResizeBatch({
   required List<YuvFrameData> frames,
   required FrameCropConfig config,
-}) => RustLib.instance.api.crateApiFrameExtractorCropAndResizeBatch(
+}) => RustLib.instance.api.crateApiVideoCropAndResizeBatch(
   frames: frames,
   config: config,
 );
@@ -78,7 +78,7 @@ abstract class FrameExtractorManager implements RustOpaqueInterface {
   ExtractionStats getStats();
 
   factory FrameExtractorManager() =>
-      RustLib.instance.api.crateApiFrameExtractorFrameExtractorManagerNew();
+      RustLib.instance.api.crateApiVideoFrameExtractorManagerNew();
 
   /// 异步批量处理 - 智能文字状态去重
   /// 策略：先裁剪缩放，再判断"有没有文字"，再判断"文字变没变"
@@ -116,10 +116,9 @@ abstract class FrameExtractorManager implements RustOpaqueInterface {
 
   static FrameExtractorManager withMockDetector({
     required Uint64List textFrames,
-  }) => RustLib.instance.api
-      .crateApiFrameExtractorFrameExtractorManagerWithMockDetector(
-        textFrames: textFrames,
-      );
+  }) => RustLib.instance.api.crateApiVideoFrameExtractorManagerWithMockDetector(
+    textFrames: textFrames,
+  );
 }
 
 /// 裁剪后的帧数据（用于输出给多模态模型）
@@ -206,7 +205,7 @@ class FrameCropConfig {
   });
 
   static Future<FrameCropConfig> default_() =>
-      RustLib.instance.api.crateApiFrameExtractorFrameCropConfigDefault();
+      RustLib.instance.api.crateApiVideoFrameCropConfigDefault();
 
   @override
   int get hashCode =>
