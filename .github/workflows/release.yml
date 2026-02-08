@@ -41,29 +41,13 @@ jobs:
         with:
           ndk-version: r26b
 
-      - name: Install cargo-ndk
-        run: cargo install cargo-ndk
+      - name: Install cargo-ndk and just
+        run: cargo install cargo-ndk just
 
       - name: Build Android library
         env:
           ANDROID_NDK_HOME: ${{ steps.setup-ndk.outputs.ndk-path }}
-        run: |
-          cd rust
-          cargo ndk -o ../android/src/main/jniLibs \
-            -t ${{ matrix.target.ndk }} \
-            build --release
-
-      - name: Copy sherpa-ncnn dependencies
-        run: |
-          # Find and copy sherpa-ncnn libraries from cargo build output
-          SHERPA_LIB_DIR=$(find rust/target -path "*/${{ matrix.target.rust }}/release/build/sherpa-ncnn-sys-*/out/*/lib" -type d 2>/dev/null | head -1)
-          if [ -n "$SHERPA_LIB_DIR" ] && [ -d "$SHERPA_LIB_DIR" ]; then
-            echo "Found sherpa-ncnn libs at: $SHERPA_LIB_DIR"
-            cp -v "$SHERPA_LIB_DIR"/*.so android/src/main/jniLibs/${{ matrix.target.ndk }}/ 2>/dev/null || true
-          else
-            echo "Warning: sherpa-ncnn library directory not found"
-            find rust/target -name "*.so" -path "*sherpa*" 2>/dev/null | head -10
-          fi
+        run: just build-android ${{ matrix.target.ndk }}
 
       - name: List built libraries
         run: ls -la android/src/main/jniLibs/${{ matrix.target.ndk }}/
@@ -90,10 +74,11 @@ jobs:
         with:
           targets: ${{ matrix.target }}
 
+      - name: Install just
+        run: cargo install just
+
       - name: Build iOS library
-        run: |
-          cd rust
-          cargo build --release --target ${{ matrix.target }}
+        run: just build-ios-target ${{ matrix.target }}
 
       - name: Upload iOS artifact
         uses: actions/upload-artifact@v4
@@ -162,7 +147,7 @@ jobs:
         uses: dtolnay/rust-toolchain@stable
 
       - name: Install flutter_rust_bridge_codegen
-        run: cargo install flutter_rust_bridge_codegen
+        run: cargo install flutter_rust_bridge_codegen cargo-expand
 
       - name: Generate Dart bindings
         run: |
