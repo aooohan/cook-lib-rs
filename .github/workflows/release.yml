@@ -1,0 +1,230 @@
+name: Build and Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Release version (e.g., 0.1.0)'
+        required: true
+        type: string
+      prerelease:
+        description: 'Mark as pre-release'
+        required: false
+        type: boolean
+        default: false
+
+env:
+  CARGO_TERM_COLOR: always
+  SHERPA_BUILD_DEBUG: "1"
+
+jobs:
+  build-android:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        target:
+          - { rust: aarch64-linux-android, ndk: arm64-v8a }
+          - { rust: armv7-linux-androideabi, ndk: armeabi-v7a }
+          - { rust: x86_64-linux-android, ndk: x86_64 }
+          - { rust: i686-linux-android, ndk: x86 }
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target.rust }}
+
+      - name: Setup Android NDK
+        uses: nttld/setup-ndk@v1
+        id: setup-ndk
+        with:
+          ndk-version: r26b
+
+      - name: Install cargo-ndk
+        run: cargo install cargo-ndk
+
+      - name: Build Android library
+        env:
+          ANDROID_NDK_HOME: ${{ steps.setup-ndk.outputs.ndk-path }}
+        run: |
+          cd rust
+          cargo ndk -o ../android/src/main/jniLibs \
+            -t ${{ matrix.target.ndk }} \
+            build --release
+
+      - name: Copy sherpa-ncnn dependencies
+        run: |
+          # Find and copy sherpa-ncnn libraries from cargo build output
+          SHERPA_LIB_DIR=$(find rust/target -path "*/${{ matrix.target.rust }}/release/build/sherpa-ncnn-sys-*/out/*/lib" -type d 2>/dev/null | head -1)
+          if [ -n "$SHERPA_LIB_DIR" ] && [ -d "$SHERPA_LIB_DIR" ]; then
+            echo "Found sherpa-ncnn libs at: $SHERPA_LIB_DIR"
+            cp -v "$SHERPA_LIB_DIR"/*.so android/src/main/jniLibs/${{ matrix.target.ndk }}/ 2>/dev/null || true
+          else
+            echo "Warning: sherpa-ncnn library directory not found"
+            find rust/target -name "*.so" -path "*sherpa*" 2>/dev/null | head -10
+          fi
+
+      - name: List built libraries
+        run: ls -la android/src/main/jniLibs/${{ matrix.target.ndk }}/
+
+      - name: Upload Android artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-${{ matrix.target.ndk }}
+          path: android/src/main/jniLibs/${{ matrix.target.ndk }}/
+
+  build-ios:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-apple-ios,aarch64-apple-ios-sim,x86_64-apple-ios
+
+      - name: Build iOS libraries
+        run: |
+          cd rust
+          cargo build --release --target aarch64-apple-ios
+          cargo build --release --target aarch64-apple-ios-sim
+          cargo build --release --target x86_64-apple-ios
+
+      - name: Create XCFramework
+        run: |
+          mkdir -p ios/Frameworks
+
+          # Create fat library for simulators
+          mkdir -p rust/target/ios-simulator-universal
+          lipo -create \
+            rust/target/aarch64-apple-ios-sim/release/libcook_lib.a \
+            rust/target/x86_64-apple-ios/release/libcook_lib.a \
+            -output rust/target/ios-simulator-universal/libcook_lib.a
+
+          # Create XCFramework
+          xcodebuild -create-xcframework \
+            -library rust/target/aarch64-apple-ios/release/libcook_lib.a \
+            -library rust/target/ios-simulator-universal/libcook_lib.a \
+            -output ios/Frameworks/cook_lib.xcframework
+
+      - name: Upload iOS artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: ios-libs
+          path: ios/Frameworks/
+
+  generate-bindings:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.24.0'
+          channel: 'stable'
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Install flutter_rust_bridge_codegen
+        run: cargo install flutter_rust_bridge_codegen
+
+      - name: Generate Dart bindings
+        run: |
+          flutter pub get
+          flutter_rust_bridge_codegen generate
+
+      - name: Upload Dart bindings
+        uses: actions/upload-artifact@v4
+        with:
+          name: dart-bindings
+          path: lib/src/rust/
+
+  commit-and-release:
+    needs: [build-android, build-ios, generate-bindings]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download Android arm64-v8a
+        uses: actions/download-artifact@v4
+        with:
+          name: android-arm64-v8a
+          path: android/src/main/jniLibs/arm64-v8a/
+
+      - name: Download Android armeabi-v7a
+        uses: actions/download-artifact@v4
+        with:
+          name: android-armeabi-v7a
+          path: android/src/main/jniLibs/armeabi-v7a/
+
+      - name: Download Android x86_64
+        uses: actions/download-artifact@v4
+        with:
+          name: android-x86_64
+          path: android/src/main/jniLibs/x86_64/
+
+      - name: Download Android x86
+        uses: actions/download-artifact@v4
+        with:
+          name: android-x86
+          path: android/src/main/jniLibs/x86/
+
+      - name: Download iOS artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: ios-libs
+          path: ios/Frameworks/
+
+      - name: Download Dart bindings
+        uses: actions/download-artifact@v4
+        with:
+          name: dart-bindings
+          path: lib/src/rust/
+
+      - name: Update version in pubspec.yaml
+        run: |
+          sed -i "s/^version: .*/version: ${{ inputs.version }}/" pubspec.yaml
+
+      - name: Commit and push
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add -f android/src/main/jniLibs ios/Frameworks lib/src/rust pubspec.yaml
+          git diff --cached --stat
+          git commit -m "Release v${{ inputs.version }}: update native libraries and bindings"
+          git push
+
+      - name: Create tag
+        run: |
+          git tag v${{ inputs.version }}
+          git push origin v${{ inputs.version }}
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: v${{ inputs.version }}
+          name: v${{ inputs.version }}
+          prerelease: ${{ inputs.prerelease }}
+          generate_release_notes: true
+          body: |
+            ## Cook Lib v${{ inputs.version }}
+
+            ### Installation
+
+            ```yaml
+            dependencies:
+              cook_lib:
+                git:
+                  url: https://github.com/${{ github.repository }}.git
+                  ref: v${{ inputs.version }}
+            ```
+
+            ### Supported Platforms
+
+            **Android:** arm64-v8a, armeabi-v7a, x86_64, x86
+            **iOS:** arm64 device, arm64 + x86_64 simulator
