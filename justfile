@@ -63,6 +63,17 @@ build-ios-target target:
     cd rust
     cargo build --release --target {{target}}
 
+    # 复制依赖库（sherpa-ncnn）
+    target_dir="target/{{target}}/release"
+    for lib in libsherpa-ncnn-c-api.a libncnn.a libsherpa-ncnn-core.a; do
+        if [ -f "$target_dir/$lib" ]; then
+            echo "Found dependency: $lib"
+        fi
+    done
+
+    echo "Built libraries in $target_dir:"
+    ls -la "$target_dir"/*.a 2>/dev/null || echo "No .a files found"
+
 # 构建所有 iOS 库
 build-ios:
     just build-ios-target aarch64-apple-ios
@@ -77,23 +88,43 @@ package-ios:
     echo "Creating iOS XCFramework..."
     mkdir -p {{ios_frameworks_dir}}
 
-    # 创建 simulator fat library
+    # 合并每个 target 的所有静态库为 libcook_lib.a
+    for target in aarch64-apple-ios aarch64-apple-ios-sim x86_64-apple-ios; do
+        target_dir="rust/target/$target/release"
+        output_lib="$target_dir/libcook_lib_fat.a"
+
+        # 收集所有 .a 文件（排除已合并的）
+        libs=$(find "$target_dir" -maxdepth 1 -name "*.a" ! -name "*_fat.a" 2>/dev/null | tr '\n' ' ')
+
+        if [ -n "$libs" ]; then
+            echo "Merging libraries for $target..."
+            libtool -static -o "$output_lib" $libs
+            echo "Created: $output_lib ($(du -h "$output_lib" | cut -f1))"
+        else
+            echo "Warning: No .a files found for $target"
+        fi
+    done
+
+    # 创建 simulator fat library (合并 arm64 和 x86_64)
     mkdir -p rust/target/ios-simulator-universal
     lipo -create \
-        rust/target/aarch64-apple-ios-sim/release/libcook_lib.a \
-        rust/target/x86_64-apple-ios/release/libcook_lib.a \
+        rust/target/aarch64-apple-ios-sim/release/libcook_lib_fat.a \
+        rust/target/x86_64-apple-ios/release/libcook_lib_fat.a \
         -output rust/target/ios-simulator-universal/libcook_lib.a
 
     # 删除旧的 xcframework
     rm -rf {{ios_frameworks_dir}}/cook_lib.xcframework
 
-    # 创建 XCFramework
+    # 创建 XCFramework（使用标准名称 libcook_lib.a）
     xcodebuild -create-xcframework \
-        -library rust/target/aarch64-apple-ios/release/libcook_lib.a \
+        -library rust/target/aarch64-apple-ios/release/libcook_lib_fat.a \
         -library rust/target/ios-simulator-universal/libcook_lib.a \
         -output {{ios_frameworks_dir}}/cook_lib.xcframework
 
-    echo "Created XCFramework at {{ios_frameworks_dir}}/cook_lib.xcframework"
+    echo ""
+    echo "✅ Created XCFramework at {{ios_frameworks_dir}}/cook_lib.xcframework"
+    echo "Contents:"
+    find {{ios_frameworks_dir}}/cook_lib.xcframework -name "*.a" -exec ls -lh {} \;
 
 # 构建 iOS 并打包 XCFramework
 build-ios-all: build-ios package-ios
