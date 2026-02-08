@@ -1,6 +1,9 @@
 /// Cook Lib - Recipe extraction library with ASR and video frame analysis
 library cook_lib;
 
+// Export native decoder (Android video/audio decoding)
+export 'src/native_decoder.dart';
+
 // Export generated Rust bindings
 export 'src/rust/frb_generated.dart';
 export 'src/rust/api/audio.dart';

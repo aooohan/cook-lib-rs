@@ -24,6 +24,8 @@ flutter:
   plugin:
     platforms:
       android:
+        package: com.example.cook_lib
+        pluginClass: CookLibPlugin
         ffiPlugin: true
       ios:
         ffiPlugin: true
