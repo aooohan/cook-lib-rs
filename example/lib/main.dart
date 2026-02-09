@@ -7,8 +7,8 @@ import 'pages/transcribe_demo_page.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   if (Platform.isAndroid || Platform.isIOS) {
-    await RustLib.init();
-    print('RustLib initialized');
+    await initCookLib();
+    print('CookLib initialized');
   }
   runApp(const MyApp());
 }

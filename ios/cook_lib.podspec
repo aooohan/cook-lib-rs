@@ -17,8 +17,22 @@ A new Flutter plugin project.
   s.dependency 'Flutter'
   s.platform = :ios, '13.0'
 
+  # 静态库
+  s.vendored_frameworks = 'Frameworks/cook_lib.xcframework'
+  s.static_framework = true
+
   # Flutter.framework does not contain a i386 slice.
-  s.pod_target_xcconfig = { 'DEFINES_MODULE' => 'YES', 'EXCLUDED_ARCHS[sdk=iphonesimulator*]' => 'i386' }
+  s.pod_target_xcconfig = {
+    'DEFINES_MODULE' => 'YES',
+    'EXCLUDED_ARCHS[sdk=iphonesimulator*]' => 'i386'
+  }
+
+  # 传递到主应用的链接器标志（关键！静态库符号需要 force_load）
+  s.user_target_xcconfig = {
+    'OTHER_LDFLAGS[sdk=iphoneos*]' => '-force_load "${PODS_ROOT}/../.symlinks/plugins/cook_lib/ios/Frameworks/cook_lib.xcframework/ios-arm64/libcook_lib.a" -lc++',
+    'OTHER_LDFLAGS[sdk=iphonesimulator*]' => '-force_load "${PODS_ROOT}/../.symlinks/plugins/cook_lib/ios/Frameworks/cook_lib.xcframework/ios-arm64_x86_64-simulator/libcook_lib.a" -lc++'
+  }
+
   s.swift_version = '5.0'
 
   # If your plugin requires a privacy manifest, for example if it uses any
