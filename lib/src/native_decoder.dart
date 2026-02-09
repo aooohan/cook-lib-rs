@@ -1,38 +1,49 @@
 import 'dart:async';
 import 'package:flutter/services.dart';
 
-/// Native video/audio decoder for Android
+/// 原生视频/音频解码器
+///
+/// 通过 Platform Channel 调用 iOS/Android 原生解码能力：
+/// - MethodChannel: 用于音频解码等一次性调用
+/// - EventChannel: 用于视频帧提取的流式数据传输
 class MediaNativeDecoder {
-  static const MethodChannel _methodChannel = MethodChannel('cook_lib/methods');
-  static const EventChannel _eventChannel = EventChannel('cook_lib/video_frames');
+  /// 音频解码通道 - 用于一次性解码请求
+  static const MethodChannel _audioChannel = MethodChannel('cook_lib/audio/decoder');
 
-  /// Decode audio from video/audio file to WAV format
-  /// Returns the path to the decoded WAV file
+  /// 视频帧流通道 - 用于流式帧数据传输
+  static const EventChannel _videoFrameChannel = EventChannel('cook_lib/video/frame_stream');
+
+  /// 解码音频为 WAV 格式
+  ///
+  /// [inputPath] 输入文件路径（视频或音频）
+  /// 返回解码后的 WAV 文件路径
   static Future<String> decodeAudioToWav(String inputPath) async {
-    final result = await _methodChannel.invokeMethod<String>(
-      'decodeAudioToWav',
+    final result = await _audioChannel.invokeMethod<String>(
+      'decodeToWav',
       {'inputPath': inputPath},
     );
     return result!;
   }
 
-  /// Start extracting video frames
-  /// Returns a stream of frame events
+  /// 提取视频帧
+  ///
+  /// 架构说明：
+  /// - 参数通过 EventChannel.receiveBroadcastStream 传递
+  /// - 原生端在 onListen 时读取参数并立即开始提取
+  /// - 这是原子操作，避免了 MethodChannel + EventChannel 分离导致的竞态条件
+  /// - 取消 Stream 订阅时，原生端 onCancel 会自动停止提取
+  ///
+  /// [videoPath] 视频文件路径
+  /// 返回帧事件流（frame/progress/complete）
   static Stream<VideoFrameEvent> extractVideoFrames(String videoPath) {
-    _methodChannel.invokeMethod('extractVideoFrames', {'videoPath': videoPath});
-    return _eventChannel.receiveBroadcastStream().map((event) {
+    return _videoFrameChannel.receiveBroadcastStream({'videoPath': videoPath}).map((event) {
       final map = Map<String, dynamic>.from(event as Map);
       return VideoFrameEvent.fromMap(map);
     });
   }
-
-  /// Stop frame extraction
-  static Future<void> stopExtraction() async {
-    await _methodChannel.invokeMethod('stopExtraction');
-  }
 }
 
-/// Video frame event from native decoder
+/// 视频帧事件
 class VideoFrameEvent {
   final String type; // 'frame', 'progress', 'complete'
   final int? width;

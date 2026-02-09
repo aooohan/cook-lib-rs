@@ -20,16 +20,18 @@ class CookLibPlugin: FlutterPlugin, MethodCallHandler, EventChannel.StreamHandle
     override fun onAttachedToEngine(@NonNull flutterPluginBinding: FlutterPlugin.FlutterPluginBinding) {
         context = flutterPluginBinding.applicationContext
 
-        methodChannel = MethodChannel(flutterPluginBinding.binaryMessenger, "cook_lib/methods")
+        // 音频解码通道 - 用于一次性解码请求
+        methodChannel = MethodChannel(flutterPluginBinding.binaryMessenger, "cook_lib/audio/decoder")
         methodChannel.setMethodCallHandler(this)
 
-        eventChannel = EventChannel(flutterPluginBinding.binaryMessenger, "cook_lib/video_frames")
+        // 视频帧流通道 - 用于流式帧数据传输
+        eventChannel = EventChannel(flutterPluginBinding.binaryMessenger, "cook_lib/video/frame_stream")
         eventChannel.setStreamHandler(this)
     }
 
     override fun onMethodCall(@NonNull call: MethodCall, @NonNull result: Result) {
         when (call.method) {
-            "decodeAudioToWav" -> {
+            "decodeToWav" -> {
                 val inputPath = call.argument<String>("inputPath")
                 if (inputPath == null) {
                     result.error("INVALID_ARGUMENT", "inputPath is required", null)
@@ -48,21 +50,6 @@ class CookLibPlugin: FlutterPlugin, MethodCallHandler, EventChannel.StreamHandle
                     }
                 }
             }
-            "extractVideoFrames" -> {
-                val videoPath = call.argument<String>("videoPath")
-                if (videoPath == null) {
-                    result.error("INVALID_ARGUMENT", "videoPath is required", null)
-                    return
-                }
-                executor.execute {
-                    VideoFrameExtractor.extractFrames(videoPath, eventSink)
-                }
-                result.success(null)
-            }
-            "stopExtraction" -> {
-                VideoFrameExtractor.stopExtraction()
-                result.success(null)
-            }
             else -> {
                 result.notImplemented()
             }
@@ -71,9 +58,20 @@ class CookLibPlugin: FlutterPlugin, MethodCallHandler, EventChannel.StreamHandle
 
     override fun onListen(arguments: Any?, events: EventChannel.EventSink?) {
         eventSink = events
+
+        // 从参数中获取 videoPath，立即开始提取
+        val args = arguments as? Map<*, *>
+        val videoPath = args?.get("videoPath") as? String
+        if (videoPath != null) {
+            executor.execute {
+                VideoFrameExtractor.extractFrames(videoPath, eventSink)
+            }
+        }
     }
 
     override fun onCancel(arguments: Any?) {
+        // 取消订阅时自动停止提取
+        VideoFrameExtractor.stopExtraction()
         eventSink = null
     }
 

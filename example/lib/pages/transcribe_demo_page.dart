@@ -16,7 +16,9 @@ class TranscribeDemoPage extends StatefulWidget {
 
 class _TranscribeDemoPageState extends State<TranscribeDemoPage> {
   final _videoPathController = TextEditingController(
-    text: '/data/local/tmp/lmth-cook.mp4',
+    text: Platform.isIOS
+        ? '/Users/lihan/workplace/cook-follow/cook-video-test/lmth-cook.mp4'
+        : '/data/local/tmp/lmth-cook.mp4',
   );
   String _modelPath = '初始化中...';
   String _status = '初始化中...';

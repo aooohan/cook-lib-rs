@@ -28,4 +28,5 @@ flutter:
         pluginClass: CookLibPlugin
         ffiPlugin: true
       ios:
+        pluginClass: CookLibPlugin
         ffiPlugin: true

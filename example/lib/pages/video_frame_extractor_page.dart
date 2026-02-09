@@ -16,7 +16,9 @@ class VideoFrameExtractorPage extends StatefulWidget {
 
 class _VideoFrameExtractorPageState extends State<VideoFrameExtractorPage> {
   final _videoPathController = TextEditingController(
-    text: '/data/local/tmp/lmth-cook.mp4',
+    text: Platform.isIOS
+        ? '/Users/lihan/workplace/cook-follow/cook-video-test/lmth-cook.mp4'
+        : '/data/local/tmp/lmth-cook.mp4',
   );
   String _status = '就绪';
   bool _busy = false;
@@ -151,7 +153,7 @@ class _VideoFrameExtractorPageState extends State<VideoFrameExtractorPage> {
   }
 
   Future<void> _stopExtraction() async {
-    await _videoProcessor?.stop();
+    _videoProcessor?.stop();
     setState(() {
       _busy = false;
       _status = '已停止';
@@ -168,8 +170,9 @@ class _VideoFrameExtractorPageState extends State<VideoFrameExtractorPage> {
           IconButton(
             icon: const Icon(Icons.save),
             tooltip: '保存提取的帧',
-            onPressed:
-                _extractedFramesList.isEmpty ? null : _saveExtractedFrames,
+            onPressed: _extractedFramesList.isEmpty
+                ? null
+                : _saveExtractedFrames,
           ),
           if (_busy)
             const Padding(
@@ -247,11 +250,11 @@ class _VideoFrameExtractorPageState extends State<VideoFrameExtractorPage> {
                   : GridView.builder(
                       gridDelegate:
                           const SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: 3,
-                        crossAxisSpacing: 8,
-                        mainAxisSpacing: 8,
-                        childAspectRatio: 1.0,
-                      ),
+                            crossAxisCount: 3,
+                            crossAxisSpacing: 8,
+                            mainAxisSpacing: 8,
+                            childAspectRatio: 1.0,
+                          ),
                       itemCount: _extractedFramesList.length,
                       itemBuilder: (context, index) {
                         final frame = _extractedFramesList[index];

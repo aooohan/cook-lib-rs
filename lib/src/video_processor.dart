@@ -57,6 +57,7 @@ class VideoProcessingResult {
 class VideoProcessor {
   final VideoFrameExtractor _extractor;
   bool _isProcessing = false;
+  StreamSubscription<VideoFrameEvent>? _subscription;
 
   VideoProcessor._(this._extractor);
 
@@ -75,7 +76,7 @@ class VideoProcessor {
   /// 处理视频，返回进度流
   ///
   /// 每当有新帧提取出来时，会 yield 一个 [VideoProcessingProgress]
-  Stream<VideoProcessingProgress> process(String videoPath) async* {
+  Stream<VideoProcessingProgress> process(String videoPath) {
     if (_isProcessing) {
       throw StateError('Already processing a video');
     }
@@ -83,11 +84,15 @@ class VideoProcessor {
     _isProcessing = true;
     _extractor.reset();
 
-    try {
-      final List<_PendingFrame> batch = [];
-      const int batchSize = 30;
+    // 使用 StreamController 以支持外部取消
+    final controller = StreamController<VideoProcessingProgress>();
+    final List<_PendingFrame> batch = [];
+    const int batchSize = 30;
 
-      await for (final event in MediaNativeDecoder.extractVideoFrames(videoPath)) {
+    _subscription = MediaNativeDecoder.extractVideoFrames(videoPath).listen(
+      (event) async {
+        if (!_isProcessing) return;
+
         if (event.isFrame && event.yPlane != null) {
           batch.add(_PendingFrame(
             width: event.width!,
@@ -99,42 +104,68 @@ class VideoProcessor {
 
           // 批量处理
           if (batch.length >= batchSize) {
-            final extracted = await _processBatch(batch);
+            // 暂停订阅，防止并发处理
+            _subscription?.pause();
+            final batchToProcess = List<_PendingFrame>.from(batch);
             batch.clear();
 
-            yield VideoProcessingProgress(
+            final extracted = await _processBatch(batchToProcess);
+
+            controller.add(VideoProcessingProgress(
               progress: event.progress ?? 0.0,
               frames: extracted,
-            );
+            ));
+            _subscription?.resume();
           }
         } else if (event.isProgress) {
           // 只有进度更新，无新帧
-          yield VideoProcessingProgress(
+          controller.add(VideoProcessingProgress(
             progress: event.progress ?? 0.0,
             frames: [],
-          );
+          ));
         } else if (event.isComplete) {
           // 处理剩余帧
           if (batch.isNotEmpty) {
-            final extracted = await _processBatch(batch);
+            final batchToProcess = List<_PendingFrame>.from(batch);
             batch.clear();
 
-            yield VideoProcessingProgress(
+            final extracted = await _processBatch(batchToProcess);
+
+            controller.add(VideoProcessingProgress(
               progress: 1.0,
               frames: extracted,
-            );
+            ));
           }
 
-          yield VideoProcessingProgress(
+          controller.add(VideoProcessingProgress(
             progress: 1.0,
             frames: [],
             isComplete: true,
-          );
+          ));
+          controller.close();
         }
-      }
-    } finally {
+      },
+      onError: (error) {
+        controller.addError(error);
+        controller.close();
+      },
+      onDone: () {
+        _isProcessing = false;
+        _subscription = null;
+        if (!controller.isClosed) {
+          controller.close();
+        }
+      },
+    );
+
+    // 当外部取消订阅时，也取消原生流
+    controller.onCancel = () {
+      _subscription?.cancel();
+      _subscription = null;
       _isProcessing = false;
-    }
+    };
+
+    return controller.stream;
   }
 
   /// 处理视频，等待完成后返回结果
@@ -152,11 +183,12 @@ class VideoProcessor {
   }
 
   /// 停止当前处理
-  Future<void> stop() async {
-    if (_isProcessing) {
-      await MediaNativeDecoder.stopExtraction();
-      _isProcessing = false;
-    }
+  ///
+  /// 会立即取消原生流订阅，触发 EventChannel 的 onCancel
+  void stop() {
+    _subscription?.cancel();
+    _subscription = null;
+    _isProcessing = false;
   }
 
   /// 重置状态
@@ -166,9 +198,7 @@ class VideoProcessor {
 
   /// 释放资源
   void dispose() {
-    if (_isProcessing) {
-      MediaNativeDecoder.stopExtraction();
-    }
+    stop();
     _extractor.dispose();
   }
 

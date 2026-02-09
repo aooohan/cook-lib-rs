@@ -167,6 +167,24 @@ clean-ios:
 clean: clean-rust clean-android clean-ios
     @echo "Cleaned all build artifacts"
 
+# ============ Example 运行 ============
+
+# 运行 iOS 模拟器示例
+run-ios:
+    cd example && flutter pub get && cd ios && pod install && cd .. && flutter run -d iPhone
+
+# 运行 Android 示例
+run-android:
+    cd example && flutter pub get && flutter run -d android
+
+# 清理并重新运行 iOS（完全清理缓存）
+run-ios-clean:
+    cd example && flutter clean && flutter pub get && cd ios && rm -rf Pods Podfile.lock && pod install && cd .. && flutter run -d iPhone
+
+# 清理并重新运行 Android
+run-android-clean:
+    cd example && flutter clean && flutter pub get && flutter run -d android
+
 # ============ 开发辅助 ============
 
 # 检查 Rust 代码
