@@ -88,13 +88,13 @@ package-ios:
     echo "Creating iOS XCFramework..."
     mkdir -p {{ios_frameworks_dir}}
 
-    # 合并每个 target 的所有静态库为 libcook_lib.a
+    # 合并每个 target 的所有静态库为 libcook_lib.a（统一命名）
     for target in aarch64-apple-ios aarch64-apple-ios-sim x86_64-apple-ios; do
         target_dir="rust/target/$target/release"
-        output_lib="$target_dir/libcook_lib_fat.a"
+        output_lib="$target_dir/libcook_lib_merged.a"
 
         # 收集所有 .a 文件（排除已合并的）
-        libs=$(find "$target_dir" -maxdepth 1 -name "*.a" ! -name "*_fat.a" 2>/dev/null | tr '\n' ' ')
+        libs=$(find "$target_dir" -maxdepth 1 -name "*.a" ! -name "*_merged.a" ! -name "*_fat.a" 2>/dev/null | tr '\n' ' ')
 
         if [ -n "$libs" ]; then
             echo "Merging libraries for $target..."
@@ -108,16 +108,20 @@ package-ios:
     # 创建 simulator fat library (合并 arm64 和 x86_64)
     mkdir -p rust/target/ios-simulator-universal
     lipo -create \
-        rust/target/aarch64-apple-ios-sim/release/libcook_lib_fat.a \
-        rust/target/x86_64-apple-ios/release/libcook_lib_fat.a \
+        rust/target/aarch64-apple-ios-sim/release/libcook_lib_merged.a \
+        rust/target/x86_64-apple-ios/release/libcook_lib_merged.a \
         -output rust/target/ios-simulator-universal/libcook_lib.a
+
+    # 为 device 创建统一命名的库
+    mkdir -p rust/target/ios-device
+    cp rust/target/aarch64-apple-ios/release/libcook_lib_merged.a rust/target/ios-device/libcook_lib.a
 
     # 删除旧的 xcframework
     rm -rf {{ios_frameworks_dir}}/cook_lib.xcframework
 
-    # 创建 XCFramework（使用标准名称 libcook_lib.a）
+    # 创建 XCFramework（两个库都使用 libcook_lib.a）
     xcodebuild -create-xcframework \
-        -library rust/target/aarch64-apple-ios/release/libcook_lib_fat.a \
+        -library rust/target/ios-device/libcook_lib.a \
         -library rust/target/ios-simulator-universal/libcook_lib.a \
         -output {{ios_frameworks_dir}}/cook_lib.xcframework
 
